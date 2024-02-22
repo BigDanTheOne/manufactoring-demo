@@ -1,0 +1,96 @@
+[
+    {
+        "id": "order123",
+        "name": "Заказ A",
+        "bundles": [
+            {
+                "bundleId": "bundleA1",
+                "products": [
+                    {
+                        "productId": "productA1",
+                        "profile": "P-001",
+                        "width": 100.5,
+                        "thickness": 2.5,
+                        "length": 200.0,
+                        "quantity": 10,
+                        "color": "Blue",
+                        "rollNumber": 345
+                    },
+                    {
+                        "productId": "productA2",
+                        "profile": "P-001",
+                        "width": 100.5,
+                        "thickness": 2.5,
+                        "length": 200.0,
+                        "quantity": 15,
+                        "color": "Blue",
+                        "rollNumber": 346
+                    }
+                ],
+                "totalMass": 300.0,
+                "totalLength": 2500.0,
+                "executionTime": 240
+            },
+            {
+                "bundleId": "bundleA2",
+                "products": [
+                    {
+                        "productId": "productA3",
+                        "profile": "P-001",
+                        "width": 100.5,
+                        "thickness": 2.5,
+                        "length": 200.0,
+                        "quantity": 25,
+                        "color": "Blue",
+                        "rollNumber": 347
+                    }
+                ],
+                "totalMass": 600.0,
+                "totalLength": 5000.0,
+                "executionTime": 240
+            }
+        ],
+        "productionLineId": "line-001",
+        "totalMass": 1200.0,
+        "totalLength": 10000.0,
+        "executionTime": 480
+    },
+    {
+        "id": "order124",
+        "name": "Заказ B",
+        "bundles": [
+            {
+                "bundleId": "bundleB1",
+                "products": [
+                    {
+                        "productId": "productB1",
+                        "profile": "P-002",
+                        "width": 80.2,
+                        "thickness": 1.5,
+                        "length": 300.0,
+                        "quantity": 50,
+                        "color": "Green",
+                        "rollNumber": 348
+                    },
+                    {
+                        "productId": "productB2",
+                        "profile": "P-002",
+                        "width": 80.2,
+                        "thickness": 1.5,
+                        "length": 300.0,
+                        "quantity": 50,
+                        "color": "Green",
+                        "rollNumber": 349
+                    }
+                ],
+                "totalMass": 450.0,
+                "totalLength": 15000.0,
+                "executionTime": 360
+            }
+        ],
+        "productionLineId": "line-002",
+        "totalMass": 900.0,
+        "totalLength": 30000.0,
+        "executionTime": 720
+    }
+]

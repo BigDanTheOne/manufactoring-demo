@@ -1,0 +1,12 @@
+__pycache__
+.env
+.idea
+.vscode
+.mypy_cache
+.VSCodeCounter
+temp
+logs
+venv
+
+test.py
+service_account_key.json
