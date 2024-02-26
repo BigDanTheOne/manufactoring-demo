@@ -4,23 +4,11 @@ import subprocess
 import config
 from datetime import datetime
 
-from beanie import PydanticObjectId
-
 from aiogram.types import (
-    Message,
-    InlineQuery,
-    InlineKeyboardMarkup,
-    InlineQueryResultArticle,
-    InputTextMessageContent,
     FSInputFile,
     InputMediaDocument,
 )
-
-from app.keyboards import KeyboardCollection
-
-from app.extras import helpers
-from app.models import Link, Company, User
-from loaders import loc, bot, mongo_client
+from loaders import bot, mongo_client
 
 
 def make_db_dump() -> None:

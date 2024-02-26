@@ -10,13 +10,12 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder, ReplyKeyboardBuilder
 
 from beanie import PydanticObjectId
 
-from app.models import User, Company, Report, CompanyLink, CompanyEditRequest
-from app.enums import ReportReason, CompanyRole
+from app.models import User, Employee, Order, Bundle
 from loaders import loc
 
 
 class KeyboardCollection:
-    def __init__(self, lang: str) -> None:
+    def __init__(self, lang: str = "ru") -> None:
         self._language = lang
 
     def return_button(self) -> InlineKeyboardButton:
@@ -57,7 +56,7 @@ class KeyboardCollection:
         builder.adjust(2, 1)
         return builder.as_markup()
 
-    def get_contact_keyboard(self) -> ReplyKeyboardMarkup:
+    def contact_keyboard(self) -> ReplyKeyboardMarkup:
         builder = ReplyKeyboardBuilder()
         builder.row(
             KeyboardButton(
@@ -85,4 +84,86 @@ class KeyboardCollection:
         builder.button(text="🇷🇺Русский", callback_data="language ru")
         builder.button(text="🇺🇸English", callback_data="language en")
         builder.adjust(2)
+        return builder.as_markup()
+
+    async def employee_buttons(self) -> list[InlineKeyboardButton]:
+        return [
+            InlineKeyboardButton(
+                text=employee.name, callback_data=f"employee:{employee.id}"
+            )
+            for employee in await Employee.all().to_list()
+        ]
+
+    def choose_action_keyboard(self) -> InlineKeyboardMarkup:
+        builder = InlineKeyboardBuilder()
+        builder.button(
+            text=loc.get_text("button/START_SHIFT"),
+            callback_data="start_shift",
+        )
+        builder.button(
+            text=loc.get_text("button/RETURN"), callback_data="return"
+        )
+        builder.adjust(1)
+        return builder.as_markup()
+
+    def choose_order_keyboard(
+        self, orders: list[Order]
+    ) -> InlineKeyboardMarkup:
+        builder = InlineKeyboardBuilder()
+
+        for order in orders:
+            builder.button(
+                text=order.name,
+                callback_data=f"order:{order.id}",
+            )
+
+        builder.button(
+            text=loc.get_text("button/FINISH_SHIFT"),
+            callback_data="finish_shift",
+        )
+        builder.button(text=loc.get_text("button/IDLE"), callback_data="idle")
+        builder.adjust(1)
+        return builder.as_markup()
+
+    def choose_bundle_keyboard(
+        self, bundles: list[Bundle]
+    ) -> InlineKeyboardMarkup:
+        builder = InlineKeyboardBuilder()
+
+        for bundle in bundles:
+            builder.button(
+                text=bundle.id,
+                callback_data=f"bundle:{bundle.id}",
+            )
+
+        builder.button(
+            text=loc.get_text("button/FINISH_SHIFT"),
+            callback_data="finish_shift",
+        )
+        builder.button(text=loc.get_text("button/IDLE"), callback_data="idle")
+        builder.adjust(1)
+        return builder.as_markup()
+
+    def results_keyboard(self) -> InlineKeyboardMarkup:
+        builder = InlineKeyboardBuilder()
+
+        builder.button(
+            text=loc.get_text("button/10_PRODUCTS"),
+            callback_data="10_products",
+        )
+        builder.button(
+            text=loc.get_text("button/OTHER_COUNT"),
+            callback_data="input_count",
+        )
+        builder.button(
+            text=loc.get_text("button/FINISH_BUNDLE"),
+            callback_data="finish_bundle",
+        )
+
+        builder.button(
+            text=loc.get_text("button/FINISH_SHIFT"),
+            callback_data="finish_shift",
+        )
+        builder.button(text=loc.get_text("button/IDLE"), callback_data="idle")
+        builder.adjust(1)
         return builder.as_markup()

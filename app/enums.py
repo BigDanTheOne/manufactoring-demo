@@ -2,5 +2,5 @@ from strenum import StrEnum
 
 
 class UserRole(StrEnum):
-    USER = "user"
+    OPERATOR = "user"
     ADMIN = "admin"

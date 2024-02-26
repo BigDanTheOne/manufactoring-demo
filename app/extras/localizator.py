@@ -30,8 +30,8 @@ class Localizator:
                 langs[lang_key.lower()] = {}
             return langs
 
-    def get_text(self, key: str, lang: str, *params: Any) -> str:
-        lang = lang.lower()
+    def get_text(self, key: str, *params: Any) -> str:
+        lang = "ru"
         if key in self.__langs[lang]:
             return str(self.__langs[lang][key]).format(*params)
         else:

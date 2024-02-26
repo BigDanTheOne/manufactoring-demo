@@ -5,28 +5,24 @@ import config
 
 from beanie import init_beanie
 
-from app.middlewares import AlbumMiddleware, UserMiddleware
+from app.middlewares import AlbumMiddleware
 from app.handlers import (
     bot_sleep,
-    global_commands_handlers,
+    start,
 )
-from app.models import (
-    User
-)
+from app.models import User, Employee
 from loaders import mongo_client, bot, dp
 
 
-async def main():
+async def run():
     await init_beanie(
         database=mongo_client.get_database(),
-        document_models=[
-            User,
-        ],
+        document_models=[User, Employee],
     )
 
     if not os.path.exists("logs"):
         os.makedirs("logs")
-    
+
     logging_mode = logging.DEBUG if config.DEBUG_MODE else logging.INFO
     logging.basicConfig(
         format="%(asctime)s %(levelname)s => %(message)s",
@@ -43,18 +39,16 @@ async def main():
 
     if config.BOT_ALIVE:
         dp.include_routers(
-            global_commands_handlers.router,
+            start.router,
         )
     else:
         dp.include_routers(bot_sleep.router)
 
     dp.message.middleware(AlbumMiddleware())
-    dp.message.middleware(UserMiddleware())
-    dp.callback_query.middleware(UserMiddleware())
 
     await bot.delete_webhook(drop_pending_updates=False)
     await dp.start_polling(bot)
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    asyncio.run(run())

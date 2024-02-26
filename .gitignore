@@ -9,4 +9,3 @@ logs
 venv
 
 test.py
-service_account_key.json

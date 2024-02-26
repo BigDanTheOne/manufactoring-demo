@@ -1,5 +1,10 @@
 from aiogram.fsm.state import State, StatesGroup
 
 
-class RegisterStates(StatesGroup):
-    setup_language = State()
+class MainStates(StatesGroup):
+    contact_confirm = State()
+    choose_employee = State()
+    choose_action = State()
+    choose_order = State()
+    choose_bundle = State()
+    enter_result = State()
