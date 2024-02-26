@@ -35,3 +35,22 @@ async def try_delete_message(
         await message_object_or_id.delete()
     except Exception:
         logging.info("Message Can't Be Deleted. Passed.")
+
+
+def is_int(n: str) -> bool:
+    try:
+        float_n = float(n)
+        int_n = int(float_n)
+    except ValueError:
+        return False
+    else:
+        return float_n == int_n
+
+
+def is_float(n: str) -> bool:
+    try:
+        float_n = float(n)
+    except ValueError:
+        return False
+    else:
+        return True

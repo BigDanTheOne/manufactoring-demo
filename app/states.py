@@ -8,3 +8,5 @@ class MainStates(StatesGroup):
     choose_order = State()
     choose_bundle = State()
     enter_result = State()
+    input_count = State()
+    idle = State()

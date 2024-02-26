@@ -2,5 +2,10 @@ from strenum import StrEnum
 
 
 class UserRole(StrEnum):
-    OPERATOR = "user"
+    OPERATOR = "operator"
     ADMIN = "admin"
+
+
+class IdleType(StrEnum):
+    SCHEDULED = "scheduled"
+    UNSCHEDULED = "unscheduled"

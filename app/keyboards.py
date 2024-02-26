@@ -11,6 +11,7 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder, ReplyKeyboardBuilder
 from beanie import PydanticObjectId
 
 from app.models import User, Employee, Order, Bundle
+from app.enums import IdleType
 from loaders import loc
 
 
@@ -165,5 +166,23 @@ class KeyboardCollection:
             callback_data="finish_shift",
         )
         builder.button(text=loc.get_text("button/IDLE"), callback_data="idle")
+        builder.adjust(1)
+        return builder.as_markup()
+
+    def idle_keyboard(self) -> InlineKeyboardMarkup:
+        builder = InlineKeyboardBuilder()
+
+        builder.button(
+            text=loc.get_text("button/SCHEDULED_FINISH"),
+            callback_data=IdleType.SCHEDULED,
+        )
+        builder.button(
+            text=loc.get_text("button/UNSCHEDULED_FINISH"),
+            callback_data=IdleType.UNSCHEDULED,
+        )
+
+        builder.button(
+            text=loc.get_text("button/RETURN"), callback_data="return"
+        )
         builder.adjust(1)
         return builder.as_markup()
