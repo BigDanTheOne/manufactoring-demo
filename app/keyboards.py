@@ -224,15 +224,15 @@ class KeyboardCollection:
         builder = InlineKeyboardBuilder()
         builder.button(
             text=loc.get_text("button/REPAIR"),
-            callback_data=f"idle_option:{IdleType.SCHEDULED}:{ScheduledIdleOption.REPAIR}",
+            callback_data=f"idle:{IdleType.SCHEDULED}:{ScheduledIdleOption.REPAIR}",
         )
         builder.button(
             text=loc.get_text("button/NO_ORDERS"),
-            callback_data=f"idle_option:{IdleType.SCHEDULED}:{ScheduledIdleOption.NO_ORDERS}",
+            callback_data=f"idle:{IdleType.SCHEDULED}:{ScheduledIdleOption.NO_ORDERS}",
         )
         builder.button(
             text=loc.get_text("button/COIL_REPLACE"),
-            callback_data=f"idle_option:{IdleType.SCHEDULED}:{ScheduledIdleOption.COIL_REPLACE}",
+            callback_data=f"idle:{IdleType.SCHEDULED}:{ScheduledIdleOption.COIL_REPLACE}",
         )
 
         builder.button(
@@ -245,11 +245,11 @@ class KeyboardCollection:
         builder = InlineKeyboardBuilder()
         builder.button(
             text=loc.get_text("button/BREAKDOWN"),
-            callback_data=f"idle_option:{IdleType.UNSCHEDULED}:{UnscheduledIdleOption.BREAKDOWN}",
+            callback_data=f"idle:{IdleType.UNSCHEDULED}:{UnscheduledIdleOption.BREAKDOWN}",
         )
         builder.button(
             text=loc.get_text("button/OTHER"),
-            callback_data=f"idle_option:{IdleType.UNSCHEDULED}:{UnscheduledIdleOption.OTHER}",
+            callback_data=f"idle:{IdleType.UNSCHEDULED}:{UnscheduledIdleOption.OTHER}",
         )
 
         builder.button(
