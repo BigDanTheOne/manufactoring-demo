@@ -23,7 +23,7 @@ async def choose_line(message: Message, state: FSMContext) -> None:
     kbc = KeyboardCollection()
     await state.set_state(MainStates.choose_line)
     await message.answer(
-        loc.get_text("Выберите линию"), reply_markup=kbc.choose_line_keyboard()
+        loc.get_text("operator/choose_line"), reply_markup=kbc.choose_line_keyboard()
     )
 
 
@@ -49,7 +49,7 @@ async def handle_chosen_line(
     )
 
     await callback.message.answer(
-        loc.get_text("Выберите оператора"), reply_markup=paginator.as_markup()
+        loc.get_text("operator/choose_employee"), reply_markup=paginator.as_markup()
     )
 
 
@@ -70,7 +70,7 @@ async def handle_chosen_employee(
 
     kbc = KeyboardCollection()
     await callback.message.answer(
-        loc.get_text(employee.name),
+        loc.get_text("operator/operator_profile", employee.name),
         reply_markup=kbc.choose_action_keyboard(),
     )
 
@@ -95,7 +95,7 @@ async def handle_start_shift_btn(
 
     kbc = KeyboardCollection()
     await callback.message.answer(
-        loc.get_text(f"{employee.name}\n\nВыберите заказ"),
+        loc.get_text("operator/choose_order"),
         reply_markup=kbc.choose_order_keyboard(orders=plan.orders),
     )
 
@@ -118,13 +118,12 @@ async def handle_chosen_order(
     kbc = KeyboardCollection()
     await callback.message.answer(
         loc.get_text(
-            "<b>{}</b>\n\nЛиния: {}\nОбщая масса: {}\nОбщая длина: {}\nВремя выполнения: {}\n\nВыберите изготавливаемую пачку:".format(
-                order.name,
-                order.production_line_id,
-                order.total_mass,
-                order.total_length,
-                order.execution_time,
-            )
+            "operator/choose_bundle",
+            order.name,
+            order.production_line_id,
+            order.total_mass,
+            order.total_length,
+            order.execution_time,
         ),
         reply_markup=kbc.choose_bundle_keyboard(order.bundles),
     )
@@ -151,12 +150,11 @@ async def handle_chosen_bundle(
     kbc = KeyboardCollection()
     await callback.message.answer(
         loc.get_text(
-            "<b>{}</b>\n\nОбщая масса: {}\nОбщая длина: {}\nВремя выполнения: {}\n\nВыберите изделие:.".format(
-                bundle.id,
-                bundle.total_mass,
-                bundle.total_length,
-                bundle.execution_time,
-            )
+            "operator/choose_product",
+            bundle.id,
+            bundle.total_mass,
+            bundle.total_length,
+            bundle.execution_time,
         ),
         reply_markup=kbc.choose_product_keyboard(bundle.products),
     )
@@ -187,16 +185,15 @@ async def handle_chosen_product(
     kbc = KeyboardCollection()
     await callback.message.answer(
         loc.get_text(
-            "<b>{}</b>\n\nПрофиль: {}\nШирина: {}\nТолщина: {}\nДлина: {}\nКол-во: {}\nЦвет: {}\nRoll Number: {}\n\nВведите промежуточный результат:".format(
-                product.id,
-                product.profile,
-                product.width,
-                product.thickness,
-                product.length,
-                product.quantity,
-                product.color,
-                product.roll_number,
-            )
+            "operator/enter_result",
+            product.id,
+            product.profile,
+            product.width,
+            product.thickness,
+            product.length,
+            product.quantity,
+            product.color,
+            product.roll_number,
         ),
         reply_markup=kbc.results_keyboard(),
     )
@@ -218,7 +215,7 @@ async def handle_10_products(
 
     # TODO: тут что-то происходит...
 
-    await callback.answer(loc.get_text("Добавлено 10 изделий / метров"))
+    await callback.answer(loc.get_text("operator/results/10_products_added"))
 
 
 @router.callback_query(F.data == "input_count", MainStates.enter_result)
@@ -228,7 +225,7 @@ async def handle_input_count_btn(
     await helpers.try_delete_message(callback.message)
     await state.set_state(MainStates.input_count)
     await callback.message.answer(
-        loc.get_text("Введите кол-во изготовленных изделий:")
+        loc.get_text("operator/results/enter_count")
     )
 
 
@@ -242,7 +239,7 @@ async def handle_count_input(message: Message, state: FSMContext) -> None:
             reply_markup=kbc.return_keyboard(),
         )
     else:
-        await message.answer(loc.get_text(f"Нужно ввести число"))
+        await message.answer(loc.get_text("operator/results/number_required"))
 
 
 @router.callback_query(F.data == "finish_bundle", MainStates.enter_result)
@@ -269,10 +266,9 @@ async def handle_finish_shift(
     await helpers.try_delete_message(callback.message)
     await state.set_state(MainStates.input_count)
 
-    kbc = KeyboardCollection()
     await callback.message.answer(
         loc.get_text(
-            "За эту смену:\n- Вы произвели ... тонн изделий;\n- Вы заработали ... рублей;\n- Линия простаивала ... минут."
+            "operator/finish_shift", 0, 0, 0
         ),
     )
     await handle_chosen_line(callback, state)
@@ -293,7 +289,7 @@ async def handle_idle_btn(callback: CallbackQuery, state: FSMContext) -> None:
 
     kbc = KeyboardCollection()
     await callback.message.answer(
-        loc.get_text("Выберите тип простоя:"), reply_markup=kbc.idle_keyboard()
+        loc.get_text("operator/choose_idle_type"), reply_markup=kbc.idle_keyboard()
     )
 
 
@@ -313,7 +309,7 @@ async def handle_idle_type(callback: CallbackQuery, state: FSMContext) -> None:
         return
 
     await callback.message.answer(
-        loc.get_text("Выберите вариант:"), reply_markup=keyboard
+        loc.get_text("operator/choose_idle_option"), reply_markup=keyboard
     )
 
 
@@ -326,7 +322,7 @@ async def handle_idle_type(callback: CallbackQuery, state: FSMContext) -> None:
 
     # TODO: тут что-то происходит...
 
-    await callback.message.answer(loc.get_text("Линия простаивает"))
+    await callback.message.answer(loc.get_text("operator/idle_line"))
     await handle_chosen_line(callback, state)
 
 

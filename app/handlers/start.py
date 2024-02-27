@@ -38,7 +38,7 @@ async def start_cmd(message: Message, state: FSMContext) -> None:
         await state.set_state(MainStates.contact_confirm)
         await message.answer(
             loc.get_text(
-                "Отправьте номер телефона, чтобы активировать Оператора."
+                "start/send_contact"
             ),
             reply_markup=kbc.contact_keyboard(),
         )
@@ -57,7 +57,7 @@ async def handle_contact(message: Message, state: FSMContext) -> None:
     phone = helpers.get_pure_phone(message.contact.phone_number)
     if (user := await User.by_phone(phone)) is None:
         await message.answer(
-            loc.get_text("Оператор не найден. Обратитесь к администратору."),
+            loc.get_text("start/user_not_found"),
         )
         return
 

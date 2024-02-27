@@ -206,11 +206,11 @@ class KeyboardCollection:
     def idle_keyboard(self) -> InlineKeyboardMarkup:
         builder = InlineKeyboardBuilder()
         builder.button(
-            text=loc.get_text("button/SCHEDULED_FINISH"),
+            text=loc.get_text("button/SCHEDULED_IDLE"),
             callback_data=IdleType.SCHEDULED,
         )
         builder.button(
-            text=loc.get_text("button/UNSCHEDULED_FINISH"),
+            text=loc.get_text("button/UNSCHEDULED_IDLE"),
             callback_data=IdleType.UNSCHEDULED,
         )
 
@@ -248,7 +248,7 @@ class KeyboardCollection:
             callback_data=f"idle:{IdleType.UNSCHEDULED}:{UnscheduledIdleOption.BREAKDOWN}",
         )
         builder.button(
-            text=loc.get_text("button/OTHER"),
+            text=loc.get_text("button/OTHER_REASON"),
             callback_data=f"idle:{IdleType.UNSCHEDULED}:{UnscheduledIdleOption.OTHER}",
         )
 
