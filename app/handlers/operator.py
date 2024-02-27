@@ -160,7 +160,7 @@ async def handle_chosen_bundle(
         ),
         reply_markup=kbc.choose_product_keyboard(bundle.products),
     )
-    
+
 
 @router.callback_query(F.data.startswith("product"), MainStates.choose_product)
 async def handle_chosen_product(
@@ -170,7 +170,7 @@ async def handle_chosen_product(
     if (product_id := storage_data.get("product_id")) is None:
         product_id = callback.data.split(":")[1]
     await state.update_data(product_id=product_id)
-    
+
     if (order_id := storage_data.get("order_id")) is None:
         return
     if (bundle_id := storage_data.get("bundle_id")) is None:
@@ -195,7 +195,7 @@ async def handle_chosen_product(
                 product.length,
                 product.quantity,
                 product.color,
-                product.roll_number
+                product.roll_number,
             )
         ),
         reply_markup=kbc.results_keyboard(),
@@ -301,18 +301,47 @@ async def handle_idle_btn(callback: CallbackQuery, state: FSMContext) -> None:
     F.data.in_({IdleType.SCHEDULED, IdleType.UNSCHEDULED}), MainStates.idle
 )
 async def handle_idle_type(callback: CallbackQuery, state: FSMContext) -> None:
-    # TODO: тут что-то происходит...
     await helpers.try_delete_message(callback.message)
+    await state.set_state(MainStates.idle_option)
+
+    kbc = KeyboardCollection()
+    if callback.data == IdleType.SCHEDULED:
+        keyboard = kbc.scheduled_idle_keyboard()
+    elif callback.data == IdleType.UNSCHEDULED:
+        keyboard = kbc.unscheduled_idle_keyboard()
+    else:
+        return
+
+    await callback.message.answer(
+        loc.get_text("Выберите вариант:"), reply_markup=keyboard
+    )
+
+
+@router.callback_query(F.data.startswith("idle"), MainStates.idle_option)
+async def handle_idle_type(callback: CallbackQuery, state: FSMContext) -> None:
+    await helpers.try_delete_message(callback.message)
+    data = callback.data.split(":")
+    idle_type = data[1]
+    idle_option = data[2]
+
+    # TODO: тут что-то происходит...
+
     await callback.message.answer(loc.get_text("Линия простаивает"))
     await handle_chosen_line(callback, state)
 
 
 @router.callback_query(
     F.data == "return",
-    StateFilter(MainStates.input_count),
+    StateFilter(
+        MainStates.input_count, MainStates.idle, MainStates.idle_option
+    ),
 )
 async def handle_return(callback: CallbackQuery, state: FSMContext) -> None:
     current_state = await state.get_state()
     match current_state:
         case MainStates.input_count:
             await handle_chosen_product(callback, state)
+        case MainStates.idle:
+            await choose_line(callback.message, state)
+        case MainStates.idle_option:
+            await handle_idle_btn(callback, state)

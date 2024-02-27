@@ -12,3 +12,4 @@ class MainStates(StatesGroup):
     enter_result = State()
     input_count = State()
     idle = State()
+    idle_option = State()

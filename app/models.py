@@ -84,7 +84,7 @@ class Bundle(BaseModel):
     total_mass: float = Field(alias="totalMass")
     total_length: float = Field(alias="totalLength")
     execution_time: int = Field(alias="executionTime")
-    
+
     def get_product(self, id: str) -> Product | None:
         for product in self.products:
             if product.id == id:
