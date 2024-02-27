@@ -1,6 +1,6 @@
 import os
 from dotenv import load_dotenv
-from typing import cast
+from typing import cast, TypedDict
 
 
 load_dotenv(override=True)

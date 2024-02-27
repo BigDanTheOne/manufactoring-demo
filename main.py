@@ -6,7 +6,7 @@ import config
 from beanie import init_beanie
 
 from app.middlewares import AlbumMiddleware
-from app.handlers import bot_sleep, start, work
+from app.handlers import bot_sleep, start, operator, admin
 from app.models import User, Employee
 from loaders import mongo_client, bot, dp
 
@@ -35,7 +35,7 @@ async def run():
     logging.info(f"BOT_ALIVE: {config.BOT_ALIVE}")
 
     if config.BOT_ALIVE:
-        dp.include_routers(start.router, work.router)
+        dp.include_routers(start.router, operator.router, admin.router)
     else:
         dp.include_routers(bot_sleep.router)
 

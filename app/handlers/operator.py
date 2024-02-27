@@ -2,10 +2,11 @@ from aiogram import Router, F
 from aiogram.types import Message, CallbackQuery
 from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
+from aiogram_widgets.pagination import KeyboardPaginator
 
 from app.extras import helpers
-from app.enums import IdleType
-from app.handlers import start
+from app.enums import IdleType, UserRole
+from app.filters import UserRoleFilter
 from app.models import Employee, Plan
 from app.keyboards import KeyboardCollection
 from app.states import MainStates
@@ -14,6 +15,64 @@ from loaders import loc
 
 router = Router()
 router.message.filter(F.from_user.id != F.bot.id)
+router.message.filter(UserRoleFilter(UserRole.OPERATOR))
+router.callback_query.filter(UserRoleFilter(UserRole.OPERATOR))
+
+
+async def choose_line(message: Message, state: FSMContext) -> None:
+    kbc = KeyboardCollection()
+    await state.set_state(MainStates.choose_line)
+    await message.answer(
+        loc.get_text("Выберите линию"), reply_markup=kbc.choose_line_keyboard()
+    )
+
+
+@router.callback_query(F.data.startswith("line"), MainStates.choose_line)
+async def handle_chosen_line(
+    callback: CallbackQuery, state: FSMContext
+) -> None:
+    storage_data = await state.get_data()
+    if (line_name := storage_data.get("line_name")) is None:
+        line_name = callback.data.split(":")[1]
+    await state.update_data(line_name=line_name)
+
+    await helpers.try_delete_message(callback.message)
+    await state.set_state(MainStates.choose_employee)
+
+    kbc = KeyboardCollection()
+    employee_buttons = await kbc.employee_buttons()
+    paginator = KeyboardPaginator(
+        data=employee_buttons,
+        router=router,
+        per_page=10,
+        per_row=2,
+    )
+
+    await callback.message.answer(
+        loc.get_text("Выберите оператора"), reply_markup=paginator.as_markup()
+    )
+
+
+@router.callback_query(
+    F.data.startswith("employee"), MainStates.choose_employee
+)
+async def handle_chosen_employee(
+    callback: CallbackQuery, state: FSMContext
+) -> None:
+    employee_id = callback.data.split(":")[1]
+    await state.update_data(employee_id=employee_id)
+
+    if (employee := await Employee.get(employee_id)) is None:
+        return
+
+    await helpers.try_delete_message(callback.message)
+    await state.set_state(MainStates.choose_action)
+
+    kbc = KeyboardCollection()
+    await callback.message.answer(
+        loc.get_text(employee.name),
+        reply_markup=kbc.choose_action_keyboard(),
+    )
 
 
 @router.callback_query(F.data == "start_shift", MainStates.choose_action)
@@ -87,16 +146,56 @@ async def handle_chosen_bundle(
     bundle = order.get_bundle(bundle_id)
 
     await helpers.try_delete_message(callback.message)
+    await state.set_state(MainStates.choose_product)
+
+    kbc = KeyboardCollection()
+    await callback.message.answer(
+        loc.get_text(
+            "<b>{}</b>\n\nОбщая масса: {}\nОбщая длина: {}\nВремя выполнения: {}\n\nВыберите изделие:.".format(
+                bundle.id,
+                bundle.total_mass,
+                bundle.total_length,
+                bundle.execution_time,
+            )
+        ),
+        reply_markup=kbc.choose_product_keyboard(bundle.products),
+    )
+    
+
+@router.callback_query(F.data.startswith("product"), MainStates.choose_product)
+async def handle_chosen_product(
+    callback: CallbackQuery, state: FSMContext
+) -> None:
+    storage_data = await state.get_data()
+    if (product_id := storage_data.get("product_id")) is None:
+        product_id = callback.data.split(":")[1]
+    await state.update_data(product_id=product_id)
+    
+    if (order_id := storage_data.get("order_id")) is None:
+        return
+    if (bundle_id := storage_data.get("bundle_id")) is None:
+        return
+
+    plan = Plan.get_plan()
+    order = plan.get_order(order_id)
+    bundle = order.get_bundle(bundle_id)
+    product = bundle.get_product(product_id)
+
+    await helpers.try_delete_message(callback.message)
     await state.set_state(MainStates.enter_result)
 
     kbc = KeyboardCollection()
     await callback.message.answer(
         loc.get_text(
-            "<b>{}</b>\n\nОбщая масса: {}\nОбщая длина: {}\nВремя выполнения: {}\n\nВведите промежуточный результат.".format(
-                bundle.id,
-                bundle.total_mass,
-                bundle.total_length,
-                bundle.execution_time,
+            "<b>{}</b>\n\nПрофиль: {}\nШирина: {}\nТолщина: {}\nДлина: {}\nКол-во: {}\nЦвет: {}\nRoll Number: {}\n\nВведите промежуточный результат:".format(
+                product.id,
+                product.profile,
+                product.width,
+                product.thickness,
+                product.length,
+                product.quantity,
+                product.color,
+                product.roll_number
             )
         ),
         reply_markup=kbc.results_keyboard(),
@@ -159,6 +258,7 @@ async def handle_finish_bundle_btn(
     StateFilter(
         MainStates.choose_order,
         MainStates.choose_bundle,
+        MainStates.choose_product,
         MainStates.enter_result,
     ),
 )
@@ -166,39 +266,34 @@ async def handle_finish_shift(
     callback: CallbackQuery, state: FSMContext
 ) -> None:
     # TODO: тут что-то происходит...
-    
     await helpers.try_delete_message(callback.message)
     await state.set_state(MainStates.input_count)
-    
+
     kbc = KeyboardCollection()
     await callback.message.answer(
         loc.get_text(
             "За эту смену:\n- Вы произвели ... тонн изделий;\n- Вы заработали ... рублей;\n- Линия простаивала ... минут."
         ),
     )
-    await start.choose_employee(callback.message, state)
-    
-    
+    await handle_chosen_line(callback, state)
+
+
 @router.callback_query(
     F.data == "idle",
     StateFilter(
         MainStates.choose_order,
         MainStates.choose_bundle,
+        MainStates.choose_product,
         MainStates.enter_result,
     ),
 )
-async def handle_idle_btn(
-    callback: CallbackQuery, state: FSMContext
-) -> None:
+async def handle_idle_btn(callback: CallbackQuery, state: FSMContext) -> None:
     await helpers.try_delete_message(callback.message)
     await state.set_state(MainStates.idle)
-    
+
     kbc = KeyboardCollection()
     await callback.message.answer(
-        loc.get_text(
-            "Выберите тип простоя:"
-        ),
-        reply_markup=kbc.idle_keyboard()
+        loc.get_text("Выберите тип простоя:"), reply_markup=kbc.idle_keyboard()
     )
 
 
@@ -209,7 +304,7 @@ async def handle_idle_type(callback: CallbackQuery, state: FSMContext) -> None:
     # TODO: тут что-то происходит...
     await helpers.try_delete_message(callback.message)
     await callback.message.answer(loc.get_text("Линия простаивает"))
-    await start.choose_employee(callback.message, state)
+    await handle_chosen_line(callback, state)
 
 
 @router.callback_query(
@@ -220,4 +315,4 @@ async def handle_return(callback: CallbackQuery, state: FSMContext) -> None:
     current_state = await state.get_state()
     match current_state:
         case MainStates.input_count:
-            await handle_chosen_bundle(callback, state)
+            await handle_chosen_product(callback, state)

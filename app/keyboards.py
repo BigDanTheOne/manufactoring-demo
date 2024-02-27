@@ -10,8 +10,8 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder, ReplyKeyboardBuilder
 
 from beanie import PydanticObjectId
 
-from app.models import User, Employee, Order, Bundle
-from app.enums import IdleType
+from app.models import User, Employee, Order, Bundle, Product
+from app.enums import IdleType, ProductionLine
 from loaders import loc
 
 
@@ -87,6 +87,19 @@ class KeyboardCollection:
         builder.adjust(2)
         return builder.as_markup()
 
+    def choose_line_keyboard(self) -> InlineKeyboardMarkup:
+        builder = InlineKeyboardBuilder()
+        builder.button(
+            text=ProductionLine.FISHER,
+            callback_data=f"line:{ProductionLine.FISHER}",
+        )
+        builder.button(
+            text=ProductionLine.BUDMASH,
+            callback_data=f"line:{ProductionLine.BUDMASH}",
+        )
+        builder.adjust(1)
+        return builder.as_markup()
+
     async def employee_buttons(self) -> list[InlineKeyboardButton]:
         return [
             InlineKeyboardButton(
@@ -135,6 +148,25 @@ class KeyboardCollection:
             builder.button(
                 text=bundle.id,
                 callback_data=f"bundle:{bundle.id}",
+            )
+
+        builder.button(
+            text=loc.get_text("button/FINISH_SHIFT"),
+            callback_data="finish_shift",
+        )
+        builder.button(text=loc.get_text("button/IDLE"), callback_data="idle")
+        builder.adjust(1)
+        return builder.as_markup()
+    
+    def choose_product_keyboard(
+        self, products: list[Product]
+    ) -> InlineKeyboardMarkup:
+        builder = InlineKeyboardBuilder()
+
+        for product in products:
+            builder.button(
+                text=product.id,
+                callback_data=f"product:{product.id}",
             )
 
         builder.button(
