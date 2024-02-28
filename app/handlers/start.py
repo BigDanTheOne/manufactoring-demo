@@ -10,7 +10,7 @@ from app.handlers import operator, admin
 from app.models import User
 from app.enums import UserRole
 from app.keyboards import KeyboardCollection
-from app.states import MainStates
+from app.states import OperatorStates
 from loaders import loc
 
 
@@ -35,7 +35,7 @@ async def start_cmd(message: Message, state: FSMContext) -> None:
     await state.clear()
     kbc = KeyboardCollection()
     if (user := await User.by_tg_id(message.chat.id)) is None:
-        await state.set_state(MainStates.contact_confirm)
+        await state.set_state(OperatorStates.contact_confirm)
         await message.answer(
             loc.get_text(
                 "start/send_contact"
@@ -52,7 +52,7 @@ async def start_cmd(message: Message, state: FSMContext) -> None:
         return
 
 
-@router.message(F.contact, MainStates.contact_confirm)
+@router.message(F.contact, OperatorStates.contact_confirm)
 async def handle_contact(message: Message, state: FSMContext) -> None:
     phone = helpers.get_pure_phone(message.contact.phone_number)
     if (user := await User.by_phone(phone)) is None:

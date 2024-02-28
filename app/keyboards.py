@@ -14,6 +14,7 @@ from app.enums import (
     ProductionLine,
     ScheduledIdleOption,
     UnscheduledIdleOption,
+    UserRole
 )
 from loaders import loc
 
@@ -257,3 +258,17 @@ class KeyboardCollection:
         )
         builder.adjust(1)
         return builder.as_markup()
+    
+    def admin_keyboard(self) -> InlineKeyboardMarkup:
+        builder = InlineKeyboardBuilder()
+        builder.button(
+            text=loc.get_text("button/ADD_EMPLOYEE"),
+            callback_data="add_employee"
+        )
+        builder.button(
+            text=loc.get_text("button/ADD_ACCOUNT"),
+            callback_data="add_account",
+        )
+        builder.adjust(1)
+        return builder.as_markup()
+    
