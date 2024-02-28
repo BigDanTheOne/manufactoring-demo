@@ -23,7 +23,8 @@ async def choose_line(message: Message, state: FSMContext) -> None:
     kbc = KeyboardCollection()
     await state.set_state(OperatorStates.choose_line)
     await message.answer(
-        loc.get_text("operator/choose_line"), reply_markup=kbc.choose_line_keyboard()
+        loc.get_text("operator/choose_line"),
+        reply_markup=kbc.choose_line_keyboard(),
     )
 
 
@@ -49,7 +50,8 @@ async def handle_chosen_line(
     )
 
     await callback.message.answer(
-        loc.get_text("operator/choose_employee"), reply_markup=paginator.as_markup()
+        loc.get_text("operator/choose_employee"),
+        reply_markup=paginator.as_markup(),
     )
 
 
@@ -129,7 +131,9 @@ async def handle_chosen_order(
     )
 
 
-@router.callback_query(F.data.startswith("bundle"), OperatorStates.choose_bundle)
+@router.callback_query(
+    F.data.startswith("bundle"), OperatorStates.choose_bundle
+)
 async def handle_chosen_bundle(
     callback: CallbackQuery, state: FSMContext
 ) -> None:
@@ -160,7 +164,9 @@ async def handle_chosen_bundle(
     )
 
 
-@router.callback_query(F.data.startswith("product"), OperatorStates.choose_product)
+@router.callback_query(
+    F.data.startswith("product"), OperatorStates.choose_product
+)
 async def handle_chosen_product(
     callback: CallbackQuery, state: FSMContext
 ) -> None:
@@ -224,9 +230,7 @@ async def handle_input_count_btn(
 ) -> None:
     await helpers.try_delete_message(callback.message)
     await state.set_state(OperatorStates.input_count)
-    await callback.message.answer(
-        loc.get_text("operator/results/enter_count")
-    )
+    await callback.message.answer(loc.get_text("operator/results/enter_count"))
 
 
 @router.message(F.text, OperatorStates.input_count)
@@ -267,9 +271,7 @@ async def handle_finish_shift(
     await state.set_state(OperatorStates.input_count)
 
     await callback.message.answer(
-        loc.get_text(
-            "operator/finish_shift", 0, 0, 0
-        ),
+        loc.get_text("operator/finish_shift", 0, 0, 0),
     )
     await handle_chosen_line(callback, state)
 
@@ -289,7 +291,8 @@ async def handle_idle_btn(callback: CallbackQuery, state: FSMContext) -> None:
 
     kbc = KeyboardCollection()
     await callback.message.answer(
-        loc.get_text("operator/choose_idle_type"), reply_markup=kbc.idle_keyboard()
+        loc.get_text("operator/choose_idle_type"),
+        reply_markup=kbc.idle_keyboard(),
     )
 
 
@@ -329,7 +332,9 @@ async def handle_idle_type(callback: CallbackQuery, state: FSMContext) -> None:
 @router.callback_query(
     F.data == "return",
     StateFilter(
-        OperatorStates.input_count, OperatorStates.idle, OperatorStates.idle_option
+        OperatorStates.input_count,
+        OperatorStates.idle,
+        OperatorStates.idle_option,
     ),
 )
 async def handle_return(callback: CallbackQuery, state: FSMContext) -> None:

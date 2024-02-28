@@ -37,9 +37,7 @@ async def start_cmd(message: Message, state: FSMContext) -> None:
     if (user := await User.by_tg_id(message.chat.id)) is None:
         await state.set_state(OperatorStates.contact_confirm)
         await message.answer(
-            loc.get_text(
-                "start/send_contact"
-            ),
+            loc.get_text("start/send_contact"),
             reply_markup=kbc.contact_keyboard(),
         )
         return
