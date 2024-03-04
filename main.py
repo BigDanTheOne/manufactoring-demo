@@ -7,14 +7,14 @@ from beanie import init_beanie
 
 from app.middlewares import AlbumMiddleware
 from app.handlers import bot_sleep, start, operator, admin
-from app.models import User, Employee
+from app.models import Account, Operator, Plan
 from loaders import mongo_client, bot, dp
 
 
 async def run():
     await init_beanie(
         database=mongo_client.get_database(),
-        document_models=[User, Employee],
+        document_models=[Account, Operator, Plan],
     )
 
     if not os.path.exists("logs"):

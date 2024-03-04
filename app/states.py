@@ -1,10 +1,10 @@
 from aiogram.fsm.state import State, StatesGroup
 
 
-class OperatorStates(StatesGroup):
+class AccountStates(StatesGroup):
     contact_confirm = State()
     choose_line = State()
-    choose_employee = State()
+    choose_operator = State()
     choose_action = State()
     choose_order = State()
     choose_bundle = State()
@@ -17,7 +17,7 @@ class OperatorStates(StatesGroup):
 
 class AdminStates(StatesGroup):
     main = State()
-    add_employee = State()
-    employee_rate = State()
+    add_operator = State()
+    operator_rate = State()
     add_account = State()
     account_role = State()

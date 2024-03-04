@@ -2,7 +2,7 @@ locale,RU
 start/send_contact,"Отправьте номер телефона, чтобы активировать пользователя."
 start/user_not_found,Пользователь не найден. Обратитесь к администратору.
 operator/choose_line,Выберите линию
-operator/choose_employee,Выберите оператора
+operator/choose_operator,Выберите оператора
 operator/operator_profile,"<b>Профиль оператора</b>
 
 Имя: {}"

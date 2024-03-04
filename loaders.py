@@ -9,7 +9,8 @@ from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.redis import RedisStorage, DefaultKeyBuilder
 from aiogram.client.session.aiohttp import AiohttpSession
 
-from app.extras.localizator import Localizator
+from app.extras import Localizator
+from api import API
 
 
 redis_client = Redis(

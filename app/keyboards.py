@@ -8,7 +8,7 @@ from aiogram.types import (
 )
 from aiogram.utils.keyboard import InlineKeyboardBuilder, ReplyKeyboardBuilder
 
-from app.models import User, Employee, Order, Bundle, Product
+from app.models import Account, Operator, Order_, Bundle_, Product_
 from app.enums import (
     IdleType,
     ProductionLine,
@@ -104,12 +104,12 @@ class KeyboardCollection:
         builder.adjust(1)
         return builder.as_markup()
 
-    async def employee_buttons(self) -> list[InlineKeyboardButton]:
+    async def operator_buttons(self) -> list[InlineKeyboardButton]:
         return [
             InlineKeyboardButton(
-                text=employee.name, callback_data=f"employee:{employee.id}"
+                text=operator.name, callback_data=f"operator:{operator.id}"
             )
-            for employee in await Employee.all().to_list()
+            for operator in await Operator.all().to_list()
         ]
 
     def choose_action_keyboard(self) -> InlineKeyboardMarkup:
@@ -125,7 +125,7 @@ class KeyboardCollection:
         return builder.as_markup()
 
     def choose_order_keyboard(
-        self, orders: list[Order]
+        self, orders: list[Order_]
     ) -> InlineKeyboardMarkup:
         builder = InlineKeyboardBuilder()
 
@@ -144,7 +144,7 @@ class KeyboardCollection:
         return builder.as_markup()
 
     def choose_bundle_keyboard(
-        self, bundles: list[Bundle]
+        self, bundles: list[Bundle_]
     ) -> InlineKeyboardMarkup:
         builder = InlineKeyboardBuilder()
 
@@ -163,7 +163,7 @@ class KeyboardCollection:
         return builder.as_markup()
 
     def choose_product_keyboard(
-        self, products: list[Product]
+        self, products: list[Product_]
     ) -> InlineKeyboardMarkup:
         builder = InlineKeyboardBuilder()
 
@@ -262,8 +262,8 @@ class KeyboardCollection:
     def admin_keyboard(self) -> InlineKeyboardMarkup:
         builder = InlineKeyboardBuilder()
         builder.button(
-            text=loc.get_text("button/ADD_EMPLOYEE"),
-            callback_data="add_employee",
+            text=loc.get_text("button/ADD_operator"),
+            callback_data="add_operator",
         )
         builder.button(
             text=loc.get_text("button/ADD_ACCOUNT"),

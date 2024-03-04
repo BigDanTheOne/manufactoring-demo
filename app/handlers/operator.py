@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from aiogram import Router, F
 from aiogram.types import Message, CallbackQuery
 from aiogram.filters import StateFilter
@@ -7,9 +9,9 @@ from aiogram_widgets.pagination import KeyboardPaginator
 from app.extras import helpers
 from app.enums import IdleType, UserRole
 from app.filters import UserRoleFilter
-from app.models import Employee, Plan
+from app.models import Operator, Plan, Order_
 from app.keyboards import KeyboardCollection
-from app.states import OperatorStates
+from app.states import AccountStates
 from loaders import loc
 
 
@@ -21,14 +23,14 @@ router.callback_query.filter(UserRoleFilter(UserRole.OPERATOR))
 
 async def choose_line(message: Message, state: FSMContext) -> None:
     kbc = KeyboardCollection()
-    await state.set_state(OperatorStates.choose_line)
+    await state.set_state(AccountStates.choose_line)
     await message.answer(
         loc.get_text("operator/choose_line"),
         reply_markup=kbc.choose_line_keyboard(),
     )
 
 
-@router.callback_query(F.data.startswith("line"), OperatorStates.choose_line)
+@router.callback_query(F.data.startswith("line"), AccountStates.choose_line)
 async def handle_chosen_line(
     callback: CallbackQuery, state: FSMContext
 ) -> None:
@@ -38,62 +40,60 @@ async def handle_chosen_line(
     await state.update_data(line_name=line_name)
 
     await helpers.try_delete_message(callback.message)
-    await state.set_state(OperatorStates.choose_employee)
+    await state.set_state(AccountStates.choose_operator)
 
     kbc = KeyboardCollection()
-    employee_buttons = await kbc.employee_buttons()
+    operator_buttons = await kbc.operator_buttons()
     paginator = KeyboardPaginator(
-        data=employee_buttons,
+        data=operator_buttons,
         router=router,
         per_page=10,
         per_row=2,
     )
 
     await callback.message.answer(
-        loc.get_text("operator/choose_employee"),
+        loc.get_text("operator/choose_operator"),
         reply_markup=paginator.as_markup(),
     )
 
 
 @router.callback_query(
-    F.data.startswith("employee"), OperatorStates.choose_employee
+    F.data.startswith("operator"), AccountStates.choose_operator
 )
-async def handle_chosen_employee(
+async def handle_chosen_operator(
     callback: CallbackQuery, state: FSMContext
 ) -> None:
-    employee_id = callback.data.split(":")[1]
-    await state.update_data(employee_id=employee_id)
+    operator_id = callback.data.split(":")[1]
+    await state.update_data(operator_id=operator_id)
 
-    if (employee := await Employee.get(employee_id)) is None:
+    if (operator := await Operator.get(operator_id)) is None:
         return
 
     await helpers.try_delete_message(callback.message)
-    await state.set_state(OperatorStates.choose_action)
+    await state.set_state(AccountStates.choose_action)
 
     kbc = KeyboardCollection()
     await callback.message.answer(
-        loc.get_text("operator/operator_profile", employee.name),
+        loc.get_text("operator/operator_profile", operator.name),
         reply_markup=kbc.choose_action_keyboard(),
     )
 
 
-@router.callback_query(F.data == "start_shift", OperatorStates.choose_action)
+@router.callback_query(F.data == "start_shift", AccountStates.choose_action)
 async def handle_start_shift_btn(
     callback: CallbackQuery, state: FSMContext
 ) -> None:
     await state.update_data(order_id=None)
     await state.update_data(bundle_id=None)
 
-    storage_data = await state.get_data()
-    if (employee_id := storage_data.get("employee_id")) is None:
+    if (plan := await Plan.get_current()) is None:
+        await callback.answer(
+            loc.get_text("Плана на сегодня ещё нет."),
+        )
         return
-    if (employee := await Employee.get(employee_id)) is None:
-        return
-
-    plan = Plan.get_plan()
 
     await helpers.try_delete_message(callback.message)
-    await state.set_state(OperatorStates.choose_order)
+    await state.set_state(AccountStates.choose_order)
 
     kbc = KeyboardCollection()
     await callback.message.answer(
@@ -102,7 +102,7 @@ async def handle_start_shift_btn(
     )
 
 
-@router.callback_query(F.data.startswith("order"), OperatorStates.choose_order)
+@router.callback_query(F.data.startswith("order"), AccountStates.choose_order)
 async def handle_chosen_order(
     callback: CallbackQuery, state: FSMContext
 ) -> None:
@@ -111,11 +111,16 @@ async def handle_chosen_order(
         order_id = callback.data.split(":")[1]
     await state.update_data(order_id=order_id)
 
-    plan = Plan.get_plan()
-    order = plan.get_order(order_id)
+    if (plan := await Plan.get_current()) is None:
+        await callback.answer(
+            loc.get_text("Плана на сегодня ещё нет."),
+        )
+        return
+    if (order := plan.get_order(order_id)) is None:
+        return
 
     await helpers.try_delete_message(callback.message)
-    await state.set_state(OperatorStates.choose_bundle)
+    await state.set_state(AccountStates.choose_bundle)
 
     kbc = KeyboardCollection()
     await callback.message.answer(
@@ -132,7 +137,7 @@ async def handle_chosen_order(
 
 
 @router.callback_query(
-    F.data.startswith("bundle"), OperatorStates.choose_bundle
+    F.data.startswith("bundle"), AccountStates.choose_bundle
 )
 async def handle_chosen_bundle(
     callback: CallbackQuery, state: FSMContext
@@ -144,12 +149,18 @@ async def handle_chosen_bundle(
     if (order_id := storage_data.get("order_id")) is None:
         return
 
-    plan = Plan.get_plan()
-    order = plan.get_order(order_id)
-    bundle = order.get_bundle(bundle_id)
+    if (plan := await Plan.get_current()) is None:
+        await callback.answer(
+            loc.get_text("Плана на сегодня ещё нет."),
+        )
+        return
+    if (order := plan.get_order(order_id)) is None:
+        return
+    if (bundle := order.get_bundle(bundle_id)) is None:
+        return
 
     await helpers.try_delete_message(callback.message)
-    await state.set_state(OperatorStates.choose_product)
+    await state.set_state(AccountStates.choose_product)
 
     kbc = KeyboardCollection()
     await callback.message.answer(
@@ -165,7 +176,7 @@ async def handle_chosen_bundle(
 
 
 @router.callback_query(
-    F.data.startswith("product"), OperatorStates.choose_product
+    F.data.startswith("product"), AccountStates.choose_product
 )
 async def handle_chosen_product(
     callback: CallbackQuery, state: FSMContext
@@ -180,13 +191,20 @@ async def handle_chosen_product(
     if (bundle_id := storage_data.get("bundle_id")) is None:
         return
 
-    plan = Plan.get_plan()
-    order = plan.get_order(order_id)
-    bundle = order.get_bundle(bundle_id)
-    product = bundle.get_product(product_id)
+    if (plan := await Plan.get_current()) is None:
+        await callback.answer(
+            loc.get_text("Плана на сегодня ещё нет."),
+        )
+        return
+    if (order := plan.get_order(order_id)) is None:
+        return
+    if (bundle := order.get_bundle(bundle_id)) is None:
+        return
+    if (product := bundle.get_product(bundle_id)) is None:
+        return
 
     await helpers.try_delete_message(callback.message)
-    await state.set_state(OperatorStates.enter_result)
+    await state.set_state(AccountStates.enter_result)
 
     kbc = KeyboardCollection()
     await callback.message.answer(
@@ -205,7 +223,7 @@ async def handle_chosen_product(
     )
 
 
-@router.callback_query(F.data == "10_products", OperatorStates.enter_result)
+@router.callback_query(F.data == "10_products", AccountStates.enter_result)
 async def handle_10_products(
     callback: CallbackQuery, state: FSMContext
 ) -> None:
@@ -215,25 +233,31 @@ async def handle_10_products(
     if (bundle_id := storage_data.get("bundle_id")) is None:
         return
 
-    plan = Plan.get_plan()
-    order = plan.get_order(order_id)
-    bundle = order.get_bundle(bundle_id)
+    if (plan := await Plan.get_current()) is None:
+        await callback.answer(
+            loc.get_text("Плана на сегодня ещё нет."),
+        )
+        return
+    if (order := plan.get_order(order_id)) is None:
+        return
+    if (bundle := order.get_bundle(bundle_id)) is None:
+        return
 
     # TODO: тут что-то происходит...
 
     await callback.answer(loc.get_text("operator/results/10_products_added"))
 
 
-@router.callback_query(F.data == "input_count", OperatorStates.enter_result)
+@router.callback_query(F.data == "input_count", AccountStates.enter_result)
 async def handle_input_count_btn(
     callback: CallbackQuery, state: FSMContext
 ) -> None:
     await helpers.try_delete_message(callback.message)
-    await state.set_state(OperatorStates.input_count)
+    await state.set_state(AccountStates.input_count)
     await callback.message.answer(loc.get_text("operator/results/enter_count"))
 
 
-@router.message(F.text, OperatorStates.input_count)
+@router.message(F.text, AccountStates.input_count)
 async def handle_count_input(message: Message, state: FSMContext) -> None:
     kbc = KeyboardCollection()
     if helpers.is_int(message.text) or helpers.is_float(message.text):
@@ -246,7 +270,7 @@ async def handle_count_input(message: Message, state: FSMContext) -> None:
         await message.answer(loc.get_text("operator/results/number_required"))
 
 
-@router.callback_query(F.data == "finish_bundle", OperatorStates.enter_result)
+@router.callback_query(F.data == "finish_bundle", AccountStates.enter_result)
 async def handle_finish_bundle_btn(
     callback: CallbackQuery, state: FSMContext
 ) -> None:
@@ -257,10 +281,10 @@ async def handle_finish_bundle_btn(
 @router.callback_query(
     F.data == "finish_shift",
     StateFilter(
-        OperatorStates.choose_order,
-        OperatorStates.choose_bundle,
-        OperatorStates.choose_product,
-        OperatorStates.enter_result,
+        AccountStates.choose_order,
+        AccountStates.choose_bundle,
+        AccountStates.choose_product,
+        AccountStates.enter_result,
     ),
 )
 async def handle_finish_shift(
@@ -268,7 +292,7 @@ async def handle_finish_shift(
 ) -> None:
     # TODO: тут что-то происходит...
     await helpers.try_delete_message(callback.message)
-    await state.set_state(OperatorStates.input_count)
+    await state.set_state(AccountStates.input_count)
 
     await callback.message.answer(
         loc.get_text("operator/finish_shift", 0, 0, 0),
@@ -279,15 +303,15 @@ async def handle_finish_shift(
 @router.callback_query(
     F.data == "idle",
     StateFilter(
-        OperatorStates.choose_order,
-        OperatorStates.choose_bundle,
-        OperatorStates.choose_product,
-        OperatorStates.enter_result,
+        AccountStates.choose_order,
+        AccountStates.choose_bundle,
+        AccountStates.choose_product,
+        AccountStates.enter_result,
     ),
 )
 async def handle_idle_btn(callback: CallbackQuery, state: FSMContext) -> None:
     await helpers.try_delete_message(callback.message)
-    await state.set_state(OperatorStates.idle)
+    await state.set_state(AccountStates.idle)
 
     kbc = KeyboardCollection()
     await callback.message.answer(
@@ -297,11 +321,11 @@ async def handle_idle_btn(callback: CallbackQuery, state: FSMContext) -> None:
 
 
 @router.callback_query(
-    F.data.in_({IdleType.SCHEDULED, IdleType.UNSCHEDULED}), OperatorStates.idle
+    F.data.in_({IdleType.SCHEDULED, IdleType.UNSCHEDULED}), AccountStates.idle
 )
 async def handle_idle_type(callback: CallbackQuery, state: FSMContext) -> None:
     await helpers.try_delete_message(callback.message)
-    await state.set_state(OperatorStates.idle_option)
+    await state.set_state(AccountStates.idle_option)
 
     kbc = KeyboardCollection()
     if callback.data == IdleType.SCHEDULED:
@@ -316,7 +340,7 @@ async def handle_idle_type(callback: CallbackQuery, state: FSMContext) -> None:
     )
 
 
-@router.callback_query(F.data.startswith("idle"), OperatorStates.idle_option)
+@router.callback_query(F.data.startswith("idle"), AccountStates.idle_option)
 async def handle_idle_type(callback: CallbackQuery, state: FSMContext) -> None:
     await helpers.try_delete_message(callback.message)
     data = callback.data.split(":")
@@ -332,17 +356,17 @@ async def handle_idle_type(callback: CallbackQuery, state: FSMContext) -> None:
 @router.callback_query(
     F.data == "return",
     StateFilter(
-        OperatorStates.input_count,
-        OperatorStates.idle,
-        OperatorStates.idle_option,
+        AccountStates.input_count,
+        AccountStates.idle,
+        AccountStates.idle_option,
     ),
 )
 async def handle_return(callback: CallbackQuery, state: FSMContext) -> None:
     current_state = await state.get_state()
     match current_state:
-        case OperatorStates.input_count:
+        case AccountStates.input_count:
             await handle_chosen_product(callback, state)
-        case OperatorStates.idle:
+        case AccountStates.idle:
             await choose_line(callback.message, state)
-        case OperatorStates.idle_option:
+        case AccountStates.idle_option:
             await handle_idle_btn(callback, state)

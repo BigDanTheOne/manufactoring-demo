@@ -7,7 +7,7 @@ from app.extras import helpers
 from app.enums import IdleType, UserRole
 from app.handlers import start
 from app.filters import UserRoleFilter
-from app.models import Employee, User
+from app.models import Operator, Account
 from app.keyboards import KeyboardCollection
 from app.states import AdminStates
 from loaders import loc
@@ -29,31 +29,31 @@ async def main(message: Message, state: FSMContext) -> None:
     )
 
 
-@router.callback_query(F.data == "add_employee", AdminStates.main)
-async def handle_add_employee_btn(
+@router.callback_query(F.data == "add_operator", AdminStates.main)
+async def handle_add_operator_btn(
     callback: CallbackQuery, state: FSMContext
 ) -> None:
     await helpers.try_delete_message(callback.message)
-    await state.set_state(AdminStates.add_employee)
+    await state.set_state(AdminStates.add_operator)
     await callback.message.answer(loc.get_text("Введите ФИО оператора:"))
 
 
-@router.message(F.text, AdminStates.add_employee)
+@router.message(F.text, AdminStates.add_operator)
 async def handle_name_input(message: Message, state: FSMContext) -> None:
-    await state.update_data(employee_name=message.text)
-    await state.set_state(AdminStates.employee_rate)
+    await state.update_data(operator_name=message.text)
+    await state.set_state(AdminStates.operator_rate)
 
     await message.answer(loc.get_text("Введите ставку оператора:"))
 
 
-@router.message(F.text, AdminStates.employee_rate)
+@router.message(F.text, AdminStates.operator_rate)
 async def handle_rate_input(message: Message, state: FSMContext) -> None:
     if not helpers.is_int(message.text) and not helpers.is_float(message.text):
         await message.answer(loc.get_text("Нужно ввести число"))
         return
 
     storage_data = await state.get_data()
-    if (employee_name := storage_data.get("employee_name")) is None:
+    if (operator_name := storage_data.get("operator_name")) is None:
         return
 
     rate: int | float
@@ -64,8 +64,8 @@ async def handle_rate_input(message: Message, state: FSMContext) -> None:
     else:
         return
 
-    new_employee = Employee(name=employee_name, rate=rate)
-    await new_employee.insert()
+    new_operator = Operator(name=operator_name, rate=rate)
+    await new_operator.insert()
 
     await message.answer(loc.get_text("Сотрудник добавлен"))
     await main(message, state)
@@ -86,7 +86,7 @@ async def handle_add_account_btn(
 async def handle_phone_input(message: Message, state: FSMContext) -> None:
     phone = helpers.get_pure_phone(message.text)
 
-    new_account = User(phone=phone, role=UserRole.OPERATOR)
+    new_account = Account(phone=phone, role=UserRole.OPERATOR)
     await new_account.insert()
 
     await message.answer(loc.get_text("Аккаунт создан"))

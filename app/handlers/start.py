@@ -7,10 +7,10 @@ from app import utils
 from app.extras import helpers
 from app.filters import UserRoleFilter
 from app.handlers import operator, admin
-from app.models import User
+from app.models import Account
 from app.enums import UserRole
 from app.keyboards import KeyboardCollection
-from app.states import OperatorStates
+from app.states import AccountStates
 from loaders import loc
 
 
@@ -34,8 +34,8 @@ async def dump_cmd(message: Message) -> None:
 async def start_cmd(message: Message, state: FSMContext) -> None:
     await state.clear()
     kbc = KeyboardCollection()
-    if (user := await User.by_tg_id(message.chat.id)) is None:
-        await state.set_state(OperatorStates.contact_confirm)
+    if (user := await Account.by_tg_id(message.chat.id)) is None:
+        await state.set_state(AccountStates.contact_confirm)
         await message.answer(
             loc.get_text("start/send_contact"),
             reply_markup=kbc.contact_keyboard(),
@@ -50,10 +50,10 @@ async def start_cmd(message: Message, state: FSMContext) -> None:
         return
 
 
-@router.message(F.contact, OperatorStates.contact_confirm)
+@router.message(F.contact, AccountStates.contact_confirm)
 async def handle_contact(message: Message, state: FSMContext) -> None:
     phone = helpers.get_pure_phone(message.contact.phone_number)
-    if (user := await User.by_phone(phone)) is None:
+    if (user := await Account.by_phone(phone)) is None:
         await message.answer(
             loc.get_text("start/user_not_found"),
         )

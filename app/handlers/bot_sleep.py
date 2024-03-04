@@ -1,6 +1,6 @@
 from aiogram import Router, F
 from aiogram.types import Message, CallbackQuery
-from app.models import User
+from app.models import Account
 from loaders import loc
 
 
