@@ -30,9 +30,12 @@ router.callback_query.filter(UserRoleFilter(UserRole.OPERATOR))
 
 
 async def choose_line(message: Message, state: FSMContext) -> None:
+    await helpers.try_delete_message(message)
+    await state.set_state(AccountStates.choose_line)
+    
     lines = await ProdutionLine.all().to_list()
     kbc = KeyboardCollection()
-    await state.set_state(AccountStates.choose_line)
+    
     await message.answer(
         loc.get_text("operator/choose_line"),
         reply_markup=kbc.choose_line_keyboard(lines),
@@ -60,6 +63,7 @@ async def handle_chosen_line(
         router=router,
         per_page=10,
         per_row=2,
+        additional_buttons=kbc.return_button_row()
     )
 
     await callback.message.answer(
@@ -386,6 +390,8 @@ async def handle_idle_type(callback: CallbackQuery, state: FSMContext) -> None:
 @router.callback_query(
     F.data == "return",
     StateFilter(
+        AccountStates.choose_operator,
+        AccountStates.choose_action,
         AccountStates.input_count,
         AccountStates.idle,
         AccountStates.idle_option,
@@ -394,9 +400,11 @@ async def handle_idle_type(callback: CallbackQuery, state: FSMContext) -> None:
 async def handle_return(callback: CallbackQuery, state: FSMContext) -> None:
     current_state = await state.get_state()
     match current_state:
+        case AccountStates.choose_action:
+            await handle_chosen_line(callback, state)
         case AccountStates.input_count:
             await handle_chosen_product(callback, state)
-        case AccountStates.idle:
+        case AccountStates.idle | AccountStates.choose_operator:
             await choose_line(callback.message, state)
         case AccountStates.idle_option:
             await handle_idle_btn(callback, state)
