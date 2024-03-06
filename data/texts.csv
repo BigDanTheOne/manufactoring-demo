@@ -6,6 +6,7 @@ operator/choose_operator,Выберите оператора
 operator/operator_profile,"<b>Профиль оператора</b>
 
 Имя: {}"
+operator/no_plan,Плана на сегодня ещё нет.
 operator/choose_order,Выберите заказ
 operator/choose_bundle,"<b>{}</b>
 
@@ -43,6 +44,24 @@ operator/finish_shift,"За эту смену:
 operator/choose_idle_type,Выберите тип простоя:
 operator/choose_idle_option,Выберите вариант:
 operator/idle_line,Линия простаивает
+operator/no_orders,Заказов больше нет
+operator/order_not_found,Заказ не найден.
+operator/order_done,Заказ {} закончен.
+operator/bundle_not_found,Пачка не найдена.
+operator/bundle_done,Пачка {} закончена.
+operator/product_not_found,Изделие не найдено.
+operator/product_done,Изделие {} закончено.
+operator/wrong_product_count,Осталось всего {} изделий. Введидите число вручную.
+operator/product_added,Добавлено {} изделий/метров.
+operator/line_restored,Работа линии восстановлена
+admin/choose_action,Выберите действие
+admin/operator/name,Введите ФИО оператора:
+admin/operator/rate,Введите ставку оператора:
+admin/operator/wrong_input,Нужно ввести число
+admin/operator/choose_line,Выберите линию для оператора
+admin/operator/added,Оператор добавлен
+admin/account/phone,Введите номер телефона аккаунта:
+admin/account/added,Аккаунт создан
 button/RETURN,Назад
 button/YES,Да
 button/NO,Нет
@@ -55,6 +74,7 @@ button/IDLE,Линия простаивает
 button/10_PRODUCTS,10 изделий/метров
 button/OTHER_COUNT,Другое кол-во
 button/FINISH_BUNDLE,Завершить пачку
+button/FINISH_PRODUCT,Завершить изделие
 button/SCHEDULED_IDLE,Плановый простой
 button/UNSCHEDULED_IDLE,Внеплановый простой
 button/REPAIR,Ремонт
@@ -62,3 +82,7 @@ button/NO_ORDERS,Нет заказов
 button/COIL_REPLACE,Замена катушки
 button/BREAKDOWN,Поломка
 button/OTHER_REASON,Другое
+button/FINISH_IDLE,Линия работает
+button/ADD_OPERATOR,Добавить оператора
+button/ADD_ACCOUNT,Добавить аккаунт
+button/CONTINUE,Продолжить 

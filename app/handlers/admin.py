@@ -23,7 +23,7 @@ async def main(message: Message, state: FSMContext) -> None:
 
     kbc = KeyboardCollection()
     await message.answer(
-        loc.get_text("Выберите действие"), reply_markup=kbc.admin_keyboard()
+        loc.get_text("admin/choose_action"), reply_markup=kbc.admin_keyboard()
     )
 
 
@@ -33,7 +33,7 @@ async def handle_add_operator_btn(
 ) -> None:
     await helpers.try_delete_message(callback.message)
     await state.set_state(AdminStates.add_operator)
-    await callback.message.answer(loc.get_text("Введите ФИО оператора:"))
+    await callback.message.answer(loc.get_text("admin/operator/name"))
 
 
 @router.message(F.text, AdminStates.add_operator)
@@ -41,13 +41,13 @@ async def handle_name_input(message: Message, state: FSMContext) -> None:
     await state.update_data(operator_name=message.text)
     await state.set_state(AdminStates.operator_rate)
 
-    await message.answer(loc.get_text("Введите ставку оператора:"))
+    await message.answer(loc.get_text("admin/operator/rate"))
 
 
 @router.message(F.text, AdminStates.operator_rate)
 async def handle_rate_input(message: Message, state: FSMContext) -> None:
     if not helpers.is_int(message.text) and not helpers.is_float(message.text):
-        await message.answer(loc.get_text("Нужно ввести число"))
+        await message.answer(loc.get_text("admin/operator/wrong_input"))
         return
 
     await state.set_state(AdminStates.operator_line)
@@ -65,7 +65,7 @@ async def handle_rate_input(message: Message, state: FSMContext) -> None:
     lines = await ProdutionLine.all().to_list()
     kbc = KeyboardCollection()
     await message.answer(
-        loc.get_text("Выберите линию для оператора"),
+        loc.get_text("admin/operator/choose_line"),
         reply_markup=kbc.choose_line_keyboard(lines),
     )
 
@@ -89,7 +89,7 @@ async def handle_line_btn(callback: CallbackQuery, state: FSMContext) -> None:
     )
     await new_operator.insert()
 
-    await callback.answer(loc.get_text("Оператор добавлен"))
+    await callback.answer(loc.get_text("admin/operator/added"))
     await main(callback.message, state)
 
 
@@ -100,7 +100,7 @@ async def handle_add_account_btn(
     await helpers.try_delete_message(callback.message)
     await state.set_state(AdminStates.add_account)
     await callback.message.answer(
-        loc.get_text("Введите номер телефона аккаунта:")
+        loc.get_text("admin/account/phone")
     )
 
 
@@ -111,5 +111,5 @@ async def handle_phone_input(message: Message, state: FSMContext) -> None:
     new_account = Account(phone=phone, role=UserRole.OPERATOR)
     await new_account.insert()
 
-    await message.answer(loc.get_text("Аккаунт создан"))
+    await message.answer(loc.get_text("admin/account/added"))
     await main(message, state)

@@ -110,13 +110,13 @@ async def handle_start_shift_btn(
         return
     if (plan := await Plan.get_current()) is None:
         await callback.answer(
-            loc.get_text("Плана на сегодня ещё нет."),
+            loc.get_text("operator/no_plan"),
         )
         return
 
     orders = await plan.get_active_orders()
     if not orders:
-        await callback.message.answer(loc.get_text(f"Заказов больше нет"))
+        await callback.message.answer(loc.get_text("operator/no_orders"))
         await choose_line(callback.message, state)
         return
 
@@ -144,7 +144,7 @@ async def handle_chosen_order(
 
     if (order := await Order.get(order_id)) is None:
         await callback.answer(
-            loc.get_text("Заказ не найден."),
+            loc.get_text("operator/order_not_found"),
         )
         return
     bundles = await order.get_active_bundles()
@@ -153,7 +153,7 @@ async def handle_chosen_order(
         order.finished = True
         await order.save()
         await callback.message.answer(
-            loc.get_text(f"Заказ {order.name} закончен.")
+            loc.get_text("operator/order_done", order.name)
         )
         await handle_start_shift_btn(callback, state)
         return
@@ -189,7 +189,7 @@ async def handle_chosen_bundle(
 
     if (bundle := await Bundle.get(bundle_id)) is None:
         await callback.answer(
-            loc.get_text("Пачка не найдена."),
+            loc.get_text("operator/bundle_not_found"),
         )
         return
     products = await bundle.get_active_products()
@@ -198,7 +198,7 @@ async def handle_chosen_bundle(
         bundle.finished = True
         await bundle.save()
         await callback.message.answer(
-            loc.get_text(f"Пачка {bundle.native_id} закончена.")
+            loc.get_text("operator/bundle_done", bundle.native_id)
         )
         await handle_chosen_order(callback, state)
         return
@@ -232,13 +232,13 @@ async def handle_chosen_product(
 
     if (product := await Product.get(product_id)) is None:
         await callback.answer(
-            loc.get_text("Изделие не найдено."),
+            loc.get_text("operator/product_not_found"),
         )
         return
 
     if product.quantity == 0:
         await callback.message.answer(
-            loc.get_text(f"Изделие {product.native_id} закончено.")
+            loc.get_text("operator/product_done", product.native_id)
         )
         await handle_chosen_bundle(callback, state)
         return
@@ -274,7 +274,7 @@ async def handle_10_products(
     await state.update_data(product_id=product_id)
     if (product := await Product.get(product_id)) is None:
         await callback.answer(
-            loc.get_text("Изделие не найдено."),
+            loc.get_text("operator/product_not_found"),
         )
         return
 
@@ -291,7 +291,7 @@ async def handle_10_products(
     if product.quantity < 10:
         await callback.answer(
             loc.get_text(
-                f"Осталось всего {product.quantity} изделий. Введидите число вручную."
+                "operator/wrong_product_count", product.quantity
             ),
             show_alert=True,
         )
@@ -307,7 +307,7 @@ async def handle_10_products(
 
     if product.quantity == 0:
         await callback.message.answer(
-            loc.get_text(f"Изделие {product.native_id} закончено.")
+            loc.get_text("operator/product_done", product.native_id)
         )
         await handle_chosen_bundle(callback, state)
         return
@@ -354,7 +354,7 @@ async def handle_count_input(message: Message, state: FSMContext) -> None:
     kbc = KeyboardCollection()
     if (product := await Product.get(product_id)) is None:
         await message.answer(
-            loc.get_text("Изделие не найдено."),
+            loc.get_text("operator/product_not_found"),
             reply_markup=kbc.return_keyboard(),
         )
         return
@@ -372,7 +372,7 @@ async def handle_count_input(message: Message, state: FSMContext) -> None:
     if product.quantity < count:
         await message.answer(
             loc.get_text(
-                f"Осталось всего {product.quantity} изделий. Введидите число вручную."
+                "operator/wrong_product_count", product.quantity
             ),
             reply_markup=kbc.return_keyboard(),
         )
@@ -387,7 +387,7 @@ async def handle_count_input(message: Message, state: FSMContext) -> None:
     await operator.save()
 
     await message.answer(
-        loc.get_text(f"Добавлено {message.text} изделий/метров."),
+        loc.get_text("operator/product_added", message.text),
         reply_markup=kbc.continue_keyboard(),
     )
 
@@ -415,7 +415,7 @@ async def handle_finish_bundle_btn(
     await product.save()
     await operator.save()
     await callback.message.answer(
-        loc.get_text(f"Изделие {product.native_id} закончено.")
+        loc.get_text("operator/product_done", product.native_id)
     )
     await handle_chosen_bundle(callback, state)
 
@@ -451,7 +451,7 @@ async def handle_finish_bundle_btn(
     bundle.finished = True
     await bundle.save()
     await callback.message.answer(
-        loc.get_text(f"Пачка {bundle.native_id} закончена.")
+        loc.get_text("operator/bundle_done", bundle.native_id)
     )
     await handle_chosen_order(callback, state)
 
@@ -568,7 +568,7 @@ async def handle_finish_idle(
 
     await line.finish_idle()
 
-    await callback.message.answer(loc.get_text("Работа линии восстановлена"))
+    await callback.message.answer(loc.get_text("operator/line_restored"))
     await handle_chosen_operator(callback, state)
 
 
