@@ -101,16 +101,24 @@ async def handle_start_shift_btn(
     await state.update_data(order_id=None)
     await state.update_data(bundle_id=None)
 
+    storage_data = await state.get_data()
+    if (operator_id := storage_data.get("operator_id")) is None:
+        return
+    if (operator := await Operator.get(operator_id)) is None:
+        return
     if (plan := await Plan.get_current()) is None:
         await callback.answer(
             loc.get_text("Плана на сегодня ещё нет."),
         )
         return
+
     orders = await plan.get_active_orders()
     if not orders:
         await callback.message.answer(loc.get_text(f"Заказов больше нет"))
         await choose_line(callback.message, state)
         return
+
+    await operator.start_shift()
 
     await helpers.try_delete_message(callback.message)
     await state.set_state(AccountStates.choose_order)
@@ -458,7 +466,14 @@ async def handle_finish_bundle_btn(
 async def handle_finish_shift(
     callback: CallbackQuery, state: FSMContext
 ) -> None:
-    # TODO: тут что-то происходит...
+    storage_data = await state.get_data()
+    if (operator_id := storage_data.get("operator_id")) is None:
+        return
+    if (operator := await Operator.get(operator_id)) is None:
+        return
+
+    await operator.finish_shift()
+
     await helpers.try_delete_message(callback.message)
     await state.set_state(AccountStates.input_count)
 
@@ -515,7 +530,13 @@ async def handle_idle_type(callback: CallbackQuery, state: FSMContext) -> None:
     idle_type = data[1]
     idle_option = data[2]
 
-    # TODO: тут что-то происходит...
+    storage_data = await state.get_data()
+    if (operator_id := storage_data.get("operator_id")) is None:
+        return
+    if (operator := await Operator.get(operator_id)) is None:
+        return
+
+    await operator.finish_shift()
 
     await callback.message.answer(loc.get_text("operator/idle_line"))
     await handle_chosen_line(callback, state)
@@ -524,8 +545,10 @@ async def handle_idle_type(callback: CallbackQuery, state: FSMContext) -> None:
 @router.callback_query(
     F.data == "return",
     StateFilter(
+        AccountStates.enter_result,
+        AccountStates.choose_product,
+        AccountStates.choose_bundle,
         AccountStates.choose_operator,
-        AccountStates.choose_action,
         AccountStates.input_count,
         AccountStates.idle,
         AccountStates.idle_option,
@@ -534,8 +557,12 @@ async def handle_idle_type(callback: CallbackQuery, state: FSMContext) -> None:
 async def handle_return(callback: CallbackQuery, state: FSMContext) -> None:
     current_state = await state.get_state()
     match current_state:
-        case AccountStates.choose_action:
-            await handle_chosen_line(callback, state)
+        case AccountStates.enter_result:
+            await handle_chosen_bundle(callback, state)
+        case AccountStates.choose_product:
+            await handle_chosen_order(callback, state)
+        case AccountStates.choose_bundle:
+            await handle_start_shift_btn(callback, state)
         case AccountStates.input_count:
             await handle_chosen_product(callback, state)
         case AccountStates.idle | AccountStates.choose_operator:

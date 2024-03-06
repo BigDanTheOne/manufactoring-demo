@@ -132,9 +132,7 @@ class KeyboardCollection:
             text=loc.get_text("button/START_SHIFT"),
             callback_data="start_shift",
         )
-        builder.button(
-            text=loc.get_text("button/RETURN"), callback_data="return"
-        )
+        builder.add(self.return_button())
         builder.adjust(1)
         return builder.as_markup()
 
@@ -154,6 +152,7 @@ class KeyboardCollection:
             callback_data="finish_shift",
         )
         builder.button(text=loc.get_text("button/IDLE"), callback_data="idle")
+        builder.add(self.return_button())
         builder.adjust(1)
         return builder.as_markup()
 
@@ -173,6 +172,7 @@ class KeyboardCollection:
             callback_data="finish_shift",
         )
         builder.button(text=loc.get_text("button/IDLE"), callback_data="idle")
+        builder.add(self.return_button())
         builder.adjust(1)
         return builder.as_markup()
 
@@ -196,6 +196,7 @@ class KeyboardCollection:
             callback_data="finish_shift",
         )
         builder.button(text=loc.get_text("button/IDLE"), callback_data="idle")
+        builder.add(self.return_button())
         builder.adjust(1)
         return builder.as_markup()
 
@@ -219,6 +220,7 @@ class KeyboardCollection:
             callback_data="finish_shift",
         )
         builder.button(text=loc.get_text("button/IDLE"), callback_data="idle")
+        builder.add(self.return_button())
         builder.adjust(1)
         return builder.as_markup()
 

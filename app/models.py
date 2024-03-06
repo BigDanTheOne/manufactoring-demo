@@ -60,10 +60,11 @@ class ProgressLog(BaseModel):
     product_id: BeanieObjectId
     count: int | float
     date: datetime
-    
+
+
 class ShiftLog(BaseModel):
     start_time: datetime
-    end_time: datetime
+    end_time: datetime | None = None
 
 
 class Operator(Document):
@@ -72,6 +73,16 @@ class Operator(Document):
     line_id: BeanieObjectId
     progress_log: list[ProgressLog] = []
     shift_log: list[ShiftLog] = []
+
+    async def start_shift(self) -> None:
+        if self.shift_log[-1].end_time is None:
+            return
+        self.shift_log.append(ShiftLog(start_time=datetime.now()))
+        await self.save()
+
+    async def finish_shift(self) -> None:
+        self.shift_log[-1].end_time = datetime.now()
+        await self.save()
 
     class Settings:
         name = "operators"
