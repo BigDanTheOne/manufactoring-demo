@@ -45,6 +45,17 @@ class KeyboardCollection:
         builder.adjust(1)
         return builder.as_markup()
 
+    def continue_keyboard(self) -> InlineKeyboardMarkup:
+        builder = InlineKeyboardBuilder()
+        builder.add(
+            InlineKeyboardButton(
+                text=loc.get_text("button/CONTINUE", self._language),
+                callback_data="return",
+            )
+        )
+        builder.adjust(1)
+        return builder.as_markup()
+
     def yes_no_keyboard(
         self, return_button: bool = False
     ) -> InlineKeyboardMarkup:
@@ -177,6 +188,10 @@ class KeyboardCollection:
             )
 
         builder.button(
+            text=loc.get_text("button/FINISH_BUNDLE"),
+            callback_data="finish_bundle",
+        )
+        builder.button(
             text=loc.get_text("button/FINISH_SHIFT"),
             callback_data="finish_shift",
         )
@@ -195,8 +210,8 @@ class KeyboardCollection:
             callback_data="input_count",
         )
         builder.button(
-            text=loc.get_text("button/FINISH_BUNDLE"),
-            callback_data="finish_bundle",
+            text=loc.get_text("button/FINISH_PRODUCT"),
+            callback_data="finish_product",
         )
 
         builder.button(

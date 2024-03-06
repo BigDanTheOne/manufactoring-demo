@@ -60,6 +60,10 @@ class ProgressLog(BaseModel):
     product_id: BeanieObjectId
     count: int | float
     date: datetime
+    
+class ShiftLog(BaseModel):
+    start_time: datetime
+    end_time: datetime
 
 
 class Operator(Document):
@@ -67,6 +71,7 @@ class Operator(Document):
     rate: int | float
     line_id: BeanieObjectId
     progress_log: list[ProgressLog] = []
+    shift_log: list[ShiftLog] = []
 
     class Settings:
         name = "operators"
@@ -87,11 +92,12 @@ class Plan(Document):
     async def get_current() -> Plan | None:
         return await Plan.find_one(Plan.date == datetime.now().date())
 
-    async def get_orders(self) -> list[Order]:
+    async def get_active_orders(self) -> list[Order]:
         orders = []
         for order_id in self.orders:
             if order := await Order.get(order_id):
-                orders.append(order)
+                if not order.finished:
+                    orders.append(order)
         return orders
 
     class Settings:
@@ -107,6 +113,7 @@ class Order(Document):
     total_mass: float
     total_length: float
     execution_time: int
+    finished: bool = False
 
     async def get_active_bundles(self) -> list[Bundle]:
         bundles = []
@@ -129,11 +136,12 @@ class Bundle(Document):
     execution_time: int
     finished: bool = False
 
-    async def get_products(self) -> list[Product]:
+    async def get_active_products(self) -> list[Product]:
         products = []
         for product_id in self.products:
             if product := await Product.get(product_id):
-                products.append(product)
+                if product.quantity > 1:
+                    products.append(product)
         return products
 
     class Settings:
