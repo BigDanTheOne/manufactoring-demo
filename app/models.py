@@ -80,8 +80,6 @@ class Operator(Document):
     shift_log: list[ShiftLog] = []
 
     async def start_shift(self) -> None:
-        if self.shift_log[-1].end_time is None:
-            return
         self.shift_log.append(ShiftLog(start_time=datetime.now()))
         await self.save()
 
@@ -123,8 +121,6 @@ class ProdutionLine(Document):
         await self.save()
 
     async def finish_idle(self) -> None:
-        if self.idle_log[-1].duration:
-            return
         start_time = self.idle_log[-1].start_time
         end_time = datetime.now()
         duration = end_time - start_time
