@@ -65,7 +65,7 @@ async def handle_rate_input(message: Message, state: FSMContext) -> None:
     lines = await ProdutionLine.all().to_list()
     kbc = KeyboardCollection()
     await message.answer(
-        loc.get_text("Выберите линию для сотрудника"),
+        loc.get_text("Выберите линию для оператора"),
         reply_markup=kbc.choose_line_keyboard(lines),
     )
 

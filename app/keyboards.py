@@ -103,12 +103,16 @@ class KeyboardCollection:
         builder.adjust(1)
         return builder.as_markup()
 
-    async def operator_buttons(self) -> list[InlineKeyboardButton]:
+    async def operator_buttons(
+        self, line: ProductionLine
+    ) -> list[InlineKeyboardButton]:
         return [
             InlineKeyboardButton(
                 text=operator.name, callback_data=f"operator:{operator.id}"
             )
-            for operator in await Operator.all().to_list()
+            for operator in await Operator.find(
+                Operator.line_id == line.id
+            ).to_list()
         ]
 
     def choose_action_keyboard(self) -> InlineKeyboardMarkup:
