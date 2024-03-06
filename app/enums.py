@@ -11,13 +11,13 @@ class IdleType(StrEnum):
     UNSCHEDULED = "unscheduled"
 
 
-class ScheduledIdleOption(StrEnum):
+class ScheduledIdleReason(StrEnum):
     REPAIR = "repair"
     NO_ORDERS = "no_orders"
     COIL_REPLACE = "coil_replace"
 
 
-class UnscheduledIdleOption(StrEnum):
+class UnscheduledIdleReason(StrEnum):
     BREAKDOWN = "breakdown"
     OTHER = "other"
 

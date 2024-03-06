@@ -13,6 +13,7 @@ class AccountStates(StatesGroup):
     input_count = State()
     idle = State()
     idle_option = State()
+    idle_now = State()
 
 
 class AdminStates(StatesGroup):

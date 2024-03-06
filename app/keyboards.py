@@ -8,13 +8,12 @@ from aiogram.types import (
 )
 from aiogram.utils.keyboard import InlineKeyboardBuilder, ReplyKeyboardBuilder
 
-from app.models import ProdutionLine, Operator, Order_, Bundle_, Product_
+from app.models import ProdutionLine, Operator, Order, Bundle, Product
 from app.enums import (
     IdleType,
     ProductionLine,
-    ScheduledIdleOption,
-    UnscheduledIdleOption,
-    UserRole,
+    ScheduledIdleReason,
+    UnscheduledIdleReason,
 )
 from loaders import loc
 
@@ -137,7 +136,7 @@ class KeyboardCollection:
         return builder.as_markup()
 
     def choose_order_keyboard(
-        self, orders: list[Order_]
+        self, orders: list[Order]
     ) -> InlineKeyboardMarkup:
         builder = InlineKeyboardBuilder()
 
@@ -152,12 +151,11 @@ class KeyboardCollection:
             callback_data="finish_shift",
         )
         builder.button(text=loc.get_text("button/IDLE"), callback_data="idle")
-        builder.add(self.return_button())
         builder.adjust(1)
         return builder.as_markup()
 
     def choose_bundle_keyboard(
-        self, bundles: list[Bundle_]
+        self, bundles: list[Bundle]
     ) -> InlineKeyboardMarkup:
         builder = InlineKeyboardBuilder()
 
@@ -177,7 +175,7 @@ class KeyboardCollection:
         return builder.as_markup()
 
     def choose_product_keyboard(
-        self, products: list[Product_]
+        self, products: list[Product]
     ) -> InlineKeyboardMarkup:
         builder = InlineKeyboardBuilder()
 
@@ -245,20 +243,18 @@ class KeyboardCollection:
         builder = InlineKeyboardBuilder()
         builder.button(
             text=loc.get_text("button/REPAIR"),
-            callback_data=f"idle:{IdleType.SCHEDULED}:{ScheduledIdleOption.REPAIR}",
+            callback_data=f"idle:{IdleType.SCHEDULED}:{ScheduledIdleReason.REPAIR}",
         )
         builder.button(
             text=loc.get_text("button/NO_ORDERS"),
-            callback_data=f"idle:{IdleType.SCHEDULED}:{ScheduledIdleOption.NO_ORDERS}",
+            callback_data=f"idle:{IdleType.SCHEDULED}:{ScheduledIdleReason.NO_ORDERS}",
         )
         builder.button(
             text=loc.get_text("button/COIL_REPLACE"),
-            callback_data=f"idle:{IdleType.SCHEDULED}:{ScheduledIdleOption.COIL_REPLACE}",
+            callback_data=f"idle:{IdleType.SCHEDULED}:{ScheduledIdleReason.COIL_REPLACE}",
         )
 
-        builder.button(
-            text=loc.get_text("button/RETURN"), callback_data="return"
-        )
+        builder.add(self.return_button())
         builder.adjust(1)
         return builder.as_markup()
 
@@ -266,15 +262,22 @@ class KeyboardCollection:
         builder = InlineKeyboardBuilder()
         builder.button(
             text=loc.get_text("button/BREAKDOWN"),
-            callback_data=f"idle:{IdleType.UNSCHEDULED}:{UnscheduledIdleOption.BREAKDOWN}",
+            callback_data=f"idle:{IdleType.UNSCHEDULED}:{UnscheduledIdleReason.BREAKDOWN}",
         )
         builder.button(
             text=loc.get_text("button/OTHER_REASON"),
-            callback_data=f"idle:{IdleType.UNSCHEDULED}:{UnscheduledIdleOption.OTHER}",
+            callback_data=f"idle:{IdleType.UNSCHEDULED}:{UnscheduledIdleReason.OTHER}",
         )
 
+        builder.add(self.return_button())
+        builder.adjust(1)
+        return builder.as_markup()
+
+    def finish_idle_keyboard(self) -> InlineKeyboardMarkup:
+        builder = InlineKeyboardBuilder()
         builder.button(
-            text=loc.get_text("button/RETURN"), callback_data="return"
+            text=loc.get_text("button/FINISH_IDLE"),
+            callback_data=f"finish_idle",
         )
         builder.adjust(1)
         return builder.as_markup()

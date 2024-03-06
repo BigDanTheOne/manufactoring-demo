@@ -3,7 +3,12 @@ from __future__ import annotations
 from datetime import datetime, date
 from pydantic import BaseModel, Field
 from beanie import Document, BeanieObjectId
-from app.enums import UserRole
+from app.enums import (
+    UserRole,
+    IdleType,
+    ScheduledIdleReason,
+    UnscheduledIdleReason,
+)
 
 
 class Plan_(BaseModel):
@@ -88,8 +93,44 @@ class Operator(Document):
         name = "operators"
 
 
+class IdleLog(BaseModel):
+    operator_id: BeanieObjectId
+    start_time: datetime
+    end_time: datetime | None = None
+    type: IdleType
+    reason: ScheduledIdleReason | UnscheduledIdleReason
+    duration: datetime | None = None
+
+
 class ProdutionLine(Document):
     name: str
+    idle_log: list[IdleLog]
+
+    async def start_idle(
+        self,
+        operator_id: BeanieObjectId,
+        type: IdleType,
+        reason: ScheduledIdleReason | UnscheduledIdleReason,
+    ) -> None:
+        self.idle_log.append(
+            IdleLog(
+                operator_id=operator_id,
+                start_time=datetime.now(),
+                type=type,
+                reason=reason,
+            )
+        )
+        await self.save()
+
+    async def finish_idle(self) -> None:
+        if self.idle_log[-1].duration:
+            return
+        start_time = self.idle_log[-1].start_time
+        end_time = datetime.now()
+        duration = end_time - start_time
+        self.idle_log[-1].end_time = end_time
+        self.idle_log[-1].duration = duration
+        await self.save()
 
     class Settings:
         name = "production_lines"
