@@ -290,9 +290,7 @@ async def handle_10_products(
 
     if product.quantity < 10:
         await callback.answer(
-            loc.get_text(
-                "operator/wrong_product_count", product.quantity
-            ),
+            loc.get_text("operator/wrong_product_count", product.quantity),
             show_alert=True,
         )
         return
@@ -371,9 +369,7 @@ async def handle_count_input(message: Message, state: FSMContext) -> None:
 
     if product.quantity < count:
         await message.answer(
-            loc.get_text(
-                "operator/wrong_product_count", product.quantity
-            ),
+            loc.get_text("operator/wrong_product_count", product.quantity),
             reply_markup=kbc.return_keyboard(),
         )
         return
@@ -496,8 +492,10 @@ async def handle_finish_shift(
 )
 async def handle_idle_btn(callback: CallbackQuery, state: FSMContext) -> None:
     await helpers.try_delete_message(callback.message)
-    await state.set_state(AccountStates.idle)
+    current_state = await state.get_state()
+    await state.update_data(state_before_idle=current_state)
 
+    await state.set_state(AccountStates.idle)
     kbc = KeyboardCollection()
     await callback.message.answer(
         loc.get_text("operator/choose_idle_type"),
@@ -547,7 +545,6 @@ async def handle_idle_type(callback: CallbackQuery, state: FSMContext) -> None:
     await line.start_idle(
         operator_id=operator.id, type=idle_type, reason=idle_reason
     )
-    await operator.finish_shift()
 
     kbc = KeyboardCollection()
     await callback.message.answer(
@@ -569,7 +566,19 @@ async def handle_finish_idle(
     await line.finish_idle()
 
     await callback.message.answer(loc.get_text("operator/line_restored"))
-    await handle_chosen_operator(callback, state)
+
+    last_state = storage_data.get("state_before_idle")
+    match last_state:
+        case AccountStates.enter_result.state:
+            await handle_chosen_product(callback, state)
+        case AccountStates.choose_product.state:
+            await handle_chosen_bundle(callback, state)
+        case AccountStates.choose_bundle.state:
+            await handle_chosen_order(callback, state)
+        case AccountStates.choose_order.state:
+            await handle_start_shift_btn(callback, state)
+        case _:
+            await handle_chosen_line(callback, state)
 
 
 @router.callback_query(

@@ -99,9 +99,7 @@ async def handle_add_account_btn(
 ) -> None:
     await helpers.try_delete_message(callback.message)
     await state.set_state(AdminStates.add_account)
-    await callback.message.answer(
-        loc.get_text("admin/account/phone")
-    )
+    await callback.message.answer(loc.get_text("admin/account/phone"))
 
 
 @router.message(F.text, AdminStates.add_account)
