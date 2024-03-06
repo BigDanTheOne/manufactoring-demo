@@ -1,13 +1,11 @@
 from aiogram import Router, F
 from aiogram.types import Message, CallbackQuery
-from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
 
 from app.extras import helpers
-from app.enums import IdleType, UserRole
-from app.handlers import start
+from app.enums import UserRole
 from app.filters import UserRoleFilter
-from app.models import Operator, Account
+from app.models import Operator, Account, ProdutionLine
 from app.keyboards import KeyboardCollection
 from app.states import AdminStates
 from loaders import loc
@@ -52,9 +50,7 @@ async def handle_rate_input(message: Message, state: FSMContext) -> None:
         await message.answer(loc.get_text("Нужно ввести число"))
         return
 
-    storage_data = await state.get_data()
-    if (operator_name := storage_data.get("operator_name")) is None:
-        return
+    await state.set_state(AdminStates.operator_line)
 
     rate: int | float
     if helpers.is_int(message.text):
@@ -64,11 +60,37 @@ async def handle_rate_input(message: Message, state: FSMContext) -> None:
     else:
         return
 
-    new_operator = Operator(name=operator_name, rate=rate)
+    await state.update_data(operator_rate=rate)
+
+    lines = await ProdutionLine.all().to_list()
+    kbc = KeyboardCollection()
+    await message.answer(
+        loc.get_text("Выберите линию для сотрудника"),
+        reply_markup=kbc.choose_line_keyboard(lines),
+    )
+
+
+@router.callback_query(F.data.startswith("line"), AdminStates.operator_line)
+async def handle_line_btn(callback: CallbackQuery, state: FSMContext) -> None:
+    line_id = callback.data.split(":")[1]
+    if (line := await ProdutionLine.get(line_id)) is None:
+        return
+    storage_data = await state.get_data()
+    if (operator_name := storage_data.get("operator_name")) is None:
+        return
+    if (operator_rate := storage_data.get("operator_rate")) is None:
+        return
+
+    new_operator = Operator(
+        name=operator_name,
+        rate=operator_rate,
+        line_id=line.id,
+        progress_log=[],
+    )
     await new_operator.insert()
 
-    await message.answer(loc.get_text("Сотрудник добавлен"))
-    await main(message, state)
+    await callback.answer(loc.get_text("Оператор добавлен"))
+    await main(callback.message, state)
 
 
 @router.callback_query(F.data == "add_account", AdminStates.main)

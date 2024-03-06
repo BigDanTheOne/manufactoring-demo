@@ -8,7 +8,7 @@ from aiogram.types import (
 )
 from aiogram.utils.keyboard import InlineKeyboardBuilder, ReplyKeyboardBuilder
 
-from app.models import Account, Operator, Order_, Bundle_, Product_
+from app.models import ProdutionLine, Operator, Order_, Bundle_, Product_
 from app.enums import (
     IdleType,
     ProductionLine,
@@ -91,16 +91,15 @@ class KeyboardCollection:
         builder.adjust(2)
         return builder.as_markup()
 
-    def choose_line_keyboard(self) -> InlineKeyboardMarkup:
+    def choose_line_keyboard(
+        self, lines: list[ProdutionLine]
+    ) -> InlineKeyboardMarkup:
         builder = InlineKeyboardBuilder()
-        builder.button(
-            text=ProductionLine.FISHER,
-            callback_data=f"line:{ProductionLine.FISHER}",
-        )
-        builder.button(
-            text=ProductionLine.BUDMASH,
-            callback_data=f"line:{ProductionLine.BUDMASH}",
-        )
+        for line in lines:
+            builder.button(
+                text=line.name,
+                callback_data=f"line:{line.id}",
+            )
         builder.adjust(1)
         return builder.as_markup()
 
@@ -150,7 +149,7 @@ class KeyboardCollection:
 
         for bundle in bundles:
             builder.button(
-                text=bundle.id,
+                text=bundle.native_id,
                 callback_data=f"bundle:{bundle.id}",
             )
 
@@ -169,7 +168,7 @@ class KeyboardCollection:
 
         for product in products:
             builder.button(
-                text=product.id,
+                text=product.native_id,
                 callback_data=f"product:{product.id}",
             )
 
@@ -262,7 +261,7 @@ class KeyboardCollection:
     def admin_keyboard(self) -> InlineKeyboardMarkup:
         builder = InlineKeyboardBuilder()
         builder.button(
-            text=loc.get_text("button/ADD_operator"),
+            text=loc.get_text("button/ADD_OPERATOR"),
             callback_data="add_operator",
         )
         builder.button(

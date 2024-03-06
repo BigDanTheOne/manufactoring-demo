@@ -19,5 +19,6 @@ class AdminStates(StatesGroup):
     main = State()
     add_operator = State()
     operator_rate = State()
+    operator_line = State()
     add_account = State()
     account_role = State()

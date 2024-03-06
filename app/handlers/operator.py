@@ -9,7 +9,7 @@ from aiogram_widgets.pagination import KeyboardPaginator
 from app.extras import helpers
 from app.enums import IdleType, UserRole
 from app.filters import UserRoleFilter
-from app.models import Operator, Plan, Order_
+from app.models import Operator, ProgressLog, Plan, Order, Bundle, Product
 from app.keyboards import KeyboardCollection
 from app.states import AccountStates
 from loaders import loc
@@ -91,6 +91,7 @@ async def handle_start_shift_btn(
             loc.get_text("Плана на сегодня ещё нет."),
         )
         return
+    orders = await plan.get_orders()
 
     await helpers.try_delete_message(callback.message)
     await state.set_state(AccountStates.choose_order)
@@ -98,7 +99,7 @@ async def handle_start_shift_btn(
     kbc = KeyboardCollection()
     await callback.message.answer(
         loc.get_text("operator/choose_order"),
-        reply_markup=kbc.choose_order_keyboard(orders=plan.orders),
+        reply_markup=kbc.choose_order_keyboard(orders=orders),
     )
 
 
@@ -111,13 +112,12 @@ async def handle_chosen_order(
         order_id = callback.data.split(":")[1]
     await state.update_data(order_id=order_id)
 
-    if (plan := await Plan.get_current()) is None:
+    if (order := await Order.get(order_id)) is None:
         await callback.answer(
-            loc.get_text("Плана на сегодня ещё нет."),
+            loc.get_text("Заказ не найден."),
         )
         return
-    if (order := plan.get_order(order_id)) is None:
-        return
+    bundles = await order.get_active_bundles()
 
     await helpers.try_delete_message(callback.message)
     await state.set_state(AccountStates.choose_bundle)
@@ -132,7 +132,7 @@ async def handle_chosen_order(
             order.total_length,
             order.execution_time,
         ),
-        reply_markup=kbc.choose_bundle_keyboard(order.bundles),
+        reply_markup=kbc.choose_bundle_keyboard(bundles),
     )
 
 
@@ -146,18 +146,13 @@ async def handle_chosen_bundle(
     if (bundle_id := storage_data.get("bundle_id")) is None:
         bundle_id = callback.data.split(":")[1]
     await state.update_data(bundle_id=bundle_id)
-    if (order_id := storage_data.get("order_id")) is None:
-        return
 
-    if (plan := await Plan.get_current()) is None:
+    if (bundle := await Bundle.get(bundle_id)) is None:
         await callback.answer(
-            loc.get_text("Плана на сегодня ещё нет."),
+            loc.get_text("Пачка не найдена."),
         )
         return
-    if (order := plan.get_order(order_id)) is None:
-        return
-    if (bundle := order.get_bundle(bundle_id)) is None:
-        return
+    products = await bundle.get_products()
 
     await helpers.try_delete_message(callback.message)
     await state.set_state(AccountStates.choose_product)
@@ -166,12 +161,12 @@ async def handle_chosen_bundle(
     await callback.message.answer(
         loc.get_text(
             "operator/choose_product",
-            bundle.id,
+            bundle.native_id,
             bundle.total_mass,
             bundle.total_length,
             bundle.execution_time,
         ),
-        reply_markup=kbc.choose_product_keyboard(bundle.products),
+        reply_markup=kbc.choose_product_keyboard(products),
     )
 
 
@@ -186,21 +181,10 @@ async def handle_chosen_product(
         product_id = callback.data.split(":")[1]
     await state.update_data(product_id=product_id)
 
-    if (order_id := storage_data.get("order_id")) is None:
-        return
-    if (bundle_id := storage_data.get("bundle_id")) is None:
-        return
-
-    if (plan := await Plan.get_current()) is None:
+    if (product := await Product.get(product_id)) is None:
         await callback.answer(
-            loc.get_text("Плана на сегодня ещё нет."),
+            loc.get_text("Изделие не найдено."),
         )
-        return
-    if (order := plan.get_order(order_id)) is None:
-        return
-    if (bundle := order.get_bundle(bundle_id)) is None:
-        return
-    if (product := bundle.get_product(bundle_id)) is None:
         return
 
     await helpers.try_delete_message(callback.message)
@@ -210,7 +194,7 @@ async def handle_chosen_product(
     await callback.message.answer(
         loc.get_text(
             "operator/enter_result",
-            product.id,
+            product.native_id,
             product.profile,
             product.width,
             product.thickness,
@@ -228,22 +212,26 @@ async def handle_10_products(
     callback: CallbackQuery, state: FSMContext
 ) -> None:
     storage_data = await state.get_data()
-    if (order_id := storage_data.get("order_id")) is None:
+    if (product_id := storage_data.get("product_id")) is None:
         return
-    if (bundle_id := storage_data.get("bundle_id")) is None:
+    if (operator_id := storage_data.get("operator_id")) is None:
         return
+    await state.update_data(product_id=product_id)
 
-    if (plan := await Plan.get_current()) is None:
+    if (product := await Product.get(product_id)) is None:
         await callback.answer(
-            loc.get_text("Плана на сегодня ещё нет."),
+            loc.get_text("Изделие не найдено."),
         )
         return
-    if (order := plan.get_order(order_id)) is None:
-        return
-    if (bundle := order.get_bundle(bundle_id)) is None:
+    if (operator := await Operator.get(operator_id)) is None:
         return
 
-    # TODO: тут что-то происходит...
+    await state.set_state(AccountStates.enter_result)
+
+    operator.progress_log.append(
+        ProgressLog(product_id=product.id, count=10, date=datetime.now())
+    )
+    await operator.save()
 
     await callback.answer(loc.get_text("operator/results/10_products_added"))
 
@@ -259,22 +247,53 @@ async def handle_input_count_btn(
 
 @router.message(F.text, AccountStates.input_count)
 async def handle_count_input(message: Message, state: FSMContext) -> None:
+    storage_data = await state.get_data()
+    if (product_id := storage_data.get("product_id")) is None:
+        return
+    if (operator_id := storage_data.get("operator_id")) is None:
+        return
+    await state.update_data(product_id=product_id)
+
     kbc = KeyboardCollection()
-    if helpers.is_int(message.text) or helpers.is_float(message.text):
-        # TODO: тут что-то происходит...
+    if (product := await Product.get(product_id)) is None:
         await message.answer(
-            loc.get_text(f"Вы ввели {message.text}"),
+            loc.get_text("Изделие не найдено."),
             reply_markup=kbc.return_keyboard(),
         )
+        return
+    if (operator := await Operator.get(operator_id)) is None:
+        return
+
+    if helpers.is_int(message.text):
+        count = int(message.text)
+    elif helpers.is_float(message.text):
+        count = float(message.text)
     else:
         await message.answer(loc.get_text("operator/results/number_required"))
+        return
+
+    operator.progress_log.append(
+        ProgressLog(product_id=product.id, count=count, date=datetime.now())
+    )
+    await operator.save()
+
+    await message.answer(
+        loc.get_text(f"Вы ввели {message.text}"),
+        reply_markup=kbc.return_keyboard(),
+    )
 
 
 @router.callback_query(F.data == "finish_bundle", AccountStates.enter_result)
 async def handle_finish_bundle_btn(
     callback: CallbackQuery, state: FSMContext
 ) -> None:
-    # TODO: тут что-то происходит...
+    storage_data = await state.get_data()
+    if (bundle_id := storage_data.get("bundle_id")) is None:
+        return
+    if (bundle := await Bundle.get(bundle_id)) is None:
+        return
+    bundle.finished = True
+    await bundle.save()
     await handle_chosen_order(callback, state)
 
 

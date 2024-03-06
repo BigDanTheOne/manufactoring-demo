@@ -56,12 +56,27 @@ class Account(Document):
         name = "accounts"
 
 
+class ProgressLog(BaseModel):
+    product_id: BeanieObjectId
+    count: int | float
+    date: datetime
+
+
 class Operator(Document):
     name: str
     rate: int | float
+    line_id: BeanieObjectId
+    progress_log: list[ProgressLog] = []
 
     class Settings:
         name = "operators"
+
+
+class ProdutionLine(Document):
+    name: str
+
+    class Settings:
+        name = "production_lines"
 
 
 class Plan(Document):
@@ -71,6 +86,13 @@ class Plan(Document):
     @staticmethod
     async def get_current() -> Plan | None:
         return await Plan.find_one(Plan.date == datetime.now().date())
+
+    async def get_orders(self) -> list[Order]:
+        orders = []
+        for order_id in self.orders:
+            if order := await Order.get(order_id):
+                orders.append(order)
+        return orders
 
     class Settings:
         name = "plans"
@@ -86,6 +108,14 @@ class Order(Document):
     total_length: float
     execution_time: int
 
+    async def get_active_bundles(self) -> list[Bundle]:
+        bundles = []
+        for bundle_id in self.bundles:
+            if bundle := await Bundle.get(bundle_id):
+                if not bundle.finished:
+                    bundles.append(bundle)
+        return bundles
+
     class Settings:
         name = "orders"
 
@@ -97,6 +127,14 @@ class Bundle(Document):
     total_mass: float
     total_length: float
     execution_time: int
+    finished: bool = False
+
+    async def get_products(self) -> list[Product]:
+        products = []
+        for product_id in self.products:
+            if product := await Product.get(product_id):
+                products.append(product)
+        return products
 
     class Settings:
         name = "bundles"

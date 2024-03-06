@@ -1,5 +1,5 @@
 from aiogram import Router, F
-from aiogram.types import Message
+from aiogram.types import Message, ReplyKeyboardRemove
 from aiogram.filters import CommandStart, Command
 from aiogram.fsm.context import FSMContext
 
@@ -58,6 +58,10 @@ async def handle_contact(message: Message, state: FSMContext) -> None:
             loc.get_text("start/user_not_found"),
         )
         return
+
+    await message.answer(
+        loc.get_text("Аккаунт активирован"), reply_markup=ReplyKeyboardRemove()
+    )
 
     user.tg_id = message.from_user.id
     await user.save()
