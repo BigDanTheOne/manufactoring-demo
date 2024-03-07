@@ -114,15 +114,15 @@ async def handle_start_shift_btn(
         return
 
     orders = await plan.get_active_orders()
-    
+
     await helpers.try_delete_message(callback.message)
     await state.set_state(AccountStates.choose_order)
-    
+
     text = loc.get_text("operator/choose_order")
     if not orders:
         text = loc.get_text("operator/no_orders")
 
-    await operator.start_shift()    
+    await operator.start_shift()
 
     kbc = KeyboardCollection()
     await callback.message.answer(
@@ -469,12 +469,15 @@ async def handle_finish_shift(
 
     produced_rounded = round(produced_ton, 2)
     income_rounded = round(income, 2)
-    
+
     line_idle_duration = round(line.get_idle_duration_today() / 60, 1)
 
     await callback.message.answer(
         loc.get_text(
-            "operator/finish_shift", produced_rounded, income_rounded, line_idle_duration
+            "operator/finish_shift",
+            produced_rounded,
+            income_rounded,
+            line_idle_duration,
         ),
     )
     await handle_chosen_line(callback, state)

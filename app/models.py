@@ -82,7 +82,7 @@ class Operator(Document):
     progress_log: list[ProgressLog] = []
     shift_log: list[ShiftLog] = []
     shift_mass_produced: float = 0.0
-    
+
     async def get_line(self) -> ProdutionLine | None:
         return await ProdutionLine.get(self.line_id)
 
@@ -152,14 +152,13 @@ class ProdutionLine(Document):
         self.idle_log[-1].end_time = end_time
         self.idle_log[-1].duration = duration
         await self.save()
-    
+
     def get_idle_duration_today(self) -> float:
         total_duration = 0
         for log in self.idle_log:
             if log.end_time and log.end_time.date() == datetime.now().date():
                 total_duration += log.duration
         return total_duration
-        
 
     class Settings:
         name = "production_lines"
