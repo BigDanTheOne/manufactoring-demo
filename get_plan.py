@@ -19,7 +19,9 @@ async def main() -> None:
     plan_total_mass = 0.0
     for order in plan.orders:
         plan_total_mass += order.total_mass
-    new_plan = Plan(orders=[], total_mass=plan_total_mass, date=datetime.now().date())
+    new_plan = Plan(
+        orders=[], total_mass=plan_total_mass, date=datetime.now().date()
+    )
     await new_plan.insert()
 
     for order in plan.orders:

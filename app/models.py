@@ -82,6 +82,9 @@ class Operator(Document):
     progress_log: list[ProgressLog] = []
     shift_log: list[ShiftLog] = []
     shift_mass_produced: float = 0.0
+    
+    async def get_line(self) -> ProdutionLine | None:
+        return await ProdutionLine.get(self.line_id)
 
     async def start_shift(self) -> None:
         if self.shift_log and self.shift_log[-1].end_time is None:
@@ -108,8 +111,7 @@ class Operator(Document):
         )
         self.shift_mass_produced += mass_produced
         await self.save()
-    
-    
+
     class Settings:
         name = "operators"
 
@@ -120,7 +122,7 @@ class IdleLog(BaseModel):
     end_time: datetime | None = None
     type: IdleType
     reason: ScheduledIdleReason | UnscheduledIdleReason
-    duration: datetime | None = None
+    duration: float | None = None
 
 
 class ProdutionLine(Document):
@@ -146,10 +148,18 @@ class ProdutionLine(Document):
     async def finish_idle(self) -> None:
         start_time = self.idle_log[-1].start_time
         end_time = datetime.now()
-        duration = end_time - start_time
+        duration = (end_time - start_time).seconds
         self.idle_log[-1].end_time = end_time
         self.idle_log[-1].duration = duration
         await self.save()
+    
+    def get_idle_duration_today(self) -> float:
+        total_duration = 0
+        for log in self.idle_log:
+            if log.end_time and log.end_time.date() == datetime.now().date():
+                total_duration += log.duration
+        return total_duration
+        
 
     class Settings:
         name = "production_lines"

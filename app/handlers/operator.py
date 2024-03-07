@@ -114,20 +114,19 @@ async def handle_start_shift_btn(
         return
 
     orders = await plan.get_active_orders()
-    if not orders:
-        await callback.message.answer(loc.get_text("operator/no_orders"))
-        await choose_line(callback.message, state)
-        return
-
-    await operator.start_shift()
-
+    
     await helpers.try_delete_message(callback.message)
     await state.set_state(AccountStates.choose_order)
+    
+    text = loc.get_text("operator/choose_order")
+    if not orders:
+        text = loc.get_text("operator/no_orders")
+
+    await operator.start_shift()    
 
     kbc = KeyboardCollection()
     await callback.message.answer(
-        loc.get_text("operator/choose_order"),
-        reply_markup=kbc.choose_order_keyboard(orders=orders),
+        text, reply_markup=kbc.choose_order_keyboard(orders=orders)
     )
 
 
@@ -296,7 +295,7 @@ async def handle_10_products(
 
     product.quantity -= 10
     await product.save()
-    
+
     await operator.log_progress(product, count=10)
 
     if product.quantity == 0:
@@ -394,10 +393,10 @@ async def handle_finish_bundle_btn(
         return
     if (operator := await Operator.get(operator_id)) is None:
         return
-    
+
     product.quantity = 0
     await product.save()
-    
+
     await operator.log_progress(product, product.quantity)
 
     await callback.message.answer(
@@ -453,6 +452,8 @@ async def handle_finish_shift(
         return
     if (operator := await Operator.get(operator_id)) is None:
         return
+    if (line := await operator.get_line()) is None:
+        return
 
     if (plan := await Plan.get_current()) is None:
         return
@@ -464,13 +465,17 @@ async def handle_finish_shift(
 
     plan_ton = plan.total_mass / 1_000_000
     produced_ton = operator.shift_mass_produced / 1_000_000
-    income = produced_ton / plan_ton * operator.rate 
-    
+    income = produced_ton / plan_ton * operator.rate
+
     produced_rounded = round(produced_ton, 2)
     income_rounded = round(income, 2)
+    
+    line_idle_duration = round(line.get_idle_duration_today() / 60, 1)
 
     await callback.message.answer(
-        loc.get_text("operator/finish_shift", produced_rounded, income_rounded, 0),
+        loc.get_text(
+            "operator/finish_shift", produced_rounded, income_rounded, line_idle_duration
+        ),
     )
     await handle_chosen_line(callback, state)
 
