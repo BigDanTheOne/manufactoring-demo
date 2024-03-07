@@ -16,7 +16,15 @@ from loaders import mongo_client
 async def main() -> None:
     await init_beanie(
         database=mongo_client.get_database(),
-        document_models=[Account, Operator, Plan, Order, Bundle, Product],
+        document_models=[
+            Account,
+            Operator,
+            Plan,
+            Order,
+            Bundle,
+            Product,
+            ProdutionLine,
+        ],
     )
 
     await Plan.delete_all()
