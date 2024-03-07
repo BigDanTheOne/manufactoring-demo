@@ -27,7 +27,7 @@
                         "rollNumber": 346
                     }
                 ],
-                "totalMass": 300.0,
+                "totalMass": 788.925,
                 "totalLength": 2500.0,
                 "executionTime": 240
             },
@@ -45,13 +45,13 @@
                         "rollNumber": 347
                     }
                 ],
-                "totalMass": 600.0,
+                "totalMass": 394.4625,
                 "totalLength": 5000.0,
                 "executionTime": 240
             }
         ],
         "productionLineId": "line-001",
-        "totalMass": 1200.0,
+        "totalMass": 1183.3875,
         "totalLength": 10000.0,
         "executionTime": 480
     },
@@ -83,13 +83,13 @@
                         "rollNumber": 349
                     }
                 ],
-                "totalMass": 450.0,
+                "totalMass": 566.613,
                 "totalLength": 15000.0,
                 "executionTime": 360
             }
         ],
         "productionLineId": "line-002",
-        "totalMass": 900.0,
+        "totalMass": 566.613,
         "totalLength": 30000.0,
         "executionTime": 720
     }

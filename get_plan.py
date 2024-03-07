@@ -16,7 +16,10 @@ async def main() -> None:
     api = API()
     plan = api.get_plan()
 
-    new_plan = Plan(orders=[], date=datetime.now().date())
+    plan_total_mass = 0.0
+    for order in plan.orders:
+        plan_total_mass += order.total_mass
+    new_plan = Plan(orders=[], total_mass=plan_total_mass, date=datetime.now().date())
     await new_plan.insert()
 
     for order in plan.orders:
@@ -53,6 +56,7 @@ async def main() -> None:
                     width=product.width,
                     thickness=product.thickness,
                     length=product.length,
+                    quantity_static=product.quantity,
                     quantity=product.quantity,
                     color=product.color,
                     roll_number=product.roll_number,

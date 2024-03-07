@@ -12,7 +12,6 @@ from app.filters import UserRoleFilter
 from app.models import (
     ProdutionLine,
     Operator,
-    ProgressLog,
     Plan,
     Order,
     Bundle,
@@ -297,11 +296,8 @@ async def handle_10_products(
 
     product.quantity -= 10
     await product.save()
-
-    operator.progress_log.append(
-        ProgressLog(product_id=product.id, count=10, date=datetime.now())
-    )
-    await operator.save()
+    
+    await operator.log_progress(product, count=10)
 
     if product.quantity == 0:
         await callback.message.answer(
@@ -377,10 +373,7 @@ async def handle_count_input(message: Message, state: FSMContext) -> None:
     product.quantity -= count
     await product.save()
 
-    operator.progress_log.append(
-        ProgressLog(product_id=product.id, count=count, date=datetime.now())
-    )
-    await operator.save()
+    await operator.log_progress(product, count)
 
     await message.answer(
         loc.get_text("operator/product_added", message.text),
@@ -401,15 +394,12 @@ async def handle_finish_bundle_btn(
         return
     if (operator := await Operator.get(operator_id)) is None:
         return
-
-    operator.progress_log.append(
-        ProgressLog(
-            product_id=product.id, count=product.quantity, date=datetime.now()
-        )
-    )
+    
     product.quantity = 0
     await product.save()
-    await operator.save()
+    
+    await operator.log_progress(product, product.quantity)
+
     await callback.message.answer(
         loc.get_text("operator/product_done", product.native_id)
     )
@@ -434,16 +424,10 @@ async def handle_finish_bundle_btn(
     for product_id in bundle.products:
         if (product := await Product.get(product_id)) is None:
             continue
-        operator.progress_log.append(
-            ProgressLog(
-                product_id=product.id,
-                count=product.quantity,
-                date=datetime.now(),
-            )
-        )
+        await operator.log_progress(product, product.quantity)
         product.quantity = 0
         await product.save()
-        await operator.save()
+
     bundle.finished = True
     await bundle.save()
     await callback.message.answer(
@@ -470,13 +454,23 @@ async def handle_finish_shift(
     if (operator := await Operator.get(operator_id)) is None:
         return
 
-    await operator.finish_shift()
+    if (plan := await Plan.get_current()) is None:
+        return
 
     await helpers.try_delete_message(callback.message)
     await state.set_state(AccountStates.input_count)
 
+    await operator.finish_shift()
+
+    plan_ton = plan.total_mass / 1_000_000
+    produced_ton = operator.shift_mass_produced / 1_000_000
+    income = produced_ton / plan_ton * operator.rate 
+    
+    produced_rounded = round(produced_ton, 2)
+    income_rounded = round(income, 2)
+
     await callback.message.answer(
-        loc.get_text("operator/finish_shift", 0, 0, 0),
+        loc.get_text("operator/finish_shift", produced_rounded, income_rounded, 0),
     )
     await handle_chosen_line(callback, state)
 

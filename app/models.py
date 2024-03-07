@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import config
+
 from datetime import datetime, date
 from pydantic import BaseModel, Field
 from beanie import Document, BeanieObjectId
@@ -64,6 +66,7 @@ class Account(Document):
 class ProgressLog(BaseModel):
     product_id: BeanieObjectId
     count: int | float
+    total_mass: float
     date: datetime
 
 
@@ -78,15 +81,35 @@ class Operator(Document):
     line_id: BeanieObjectId
     progress_log: list[ProgressLog] = []
     shift_log: list[ShiftLog] = []
+    shift_mass_produced: float = 0.0
 
     async def start_shift(self) -> None:
+        if self.shift_log and self.shift_log[-1].end_time is None:
+            return
+        self.shift_mass_produced = 0.0
         self.shift_log.append(ShiftLog(start_time=datetime.now()))
         await self.save()
 
     async def finish_shift(self) -> None:
+        if self.shift_log and self.shift_log[-1].end_time:
+            return
         self.shift_log[-1].end_time = datetime.now()
         await self.save()
 
+    async def log_progress(self, product: Product, count: int | float) -> None:
+        mass_produced = count * product.unit_mass
+        self.progress_log.append(
+            ProgressLog(
+                product_id=product.id,
+                count=count,
+                total_mass=mass_produced,
+                date=datetime.now(),
+            )
+        )
+        self.shift_mass_produced += mass_produced
+        await self.save()
+    
+    
     class Settings:
         name = "operators"
 
@@ -134,6 +157,7 @@ class ProdutionLine(Document):
 
 class Plan(Document):
     orders: list[BeanieObjectId]
+    total_mass: float
     date: date
 
     @staticmethod
@@ -203,9 +227,20 @@ class Product(Document):
     width: float
     thickness: float
     length: float
+    quantity_static: int
     quantity: int
     color: str
     roll_number: int
+
+    @property
+    def total_mass(self) -> float:
+        return (
+            self.width * self.thickness * self.length * config.SPECIFIC_GRAVITY
+        )
+
+    @property
+    def unit_mass(self) -> float:
+        return self.total_mass / self.quantity_static
 
     class Settings:
         name = "products"

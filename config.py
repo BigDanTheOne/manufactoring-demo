@@ -26,3 +26,6 @@ REDIS_PREFIX = cast(str, os.getenv("REDIS_PREFIX"))
 
 # mongo config
 MONGODB_CONN = os.getenv("MONGODB_CONN")
+
+
+SPECIFIC_GRAVITY = 0.00785
