@@ -1,26 +1,23 @@
-from datetime import datetime
-
-from aiogram import Router, F
-from aiogram.types import Message, CallbackQuery
+from aiogram import F, Router
 from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
+from aiogram.types import CallbackQuery, Message
 from aiogram_widgets.pagination import KeyboardPaginator
 
-from app.extras import helpers
 from app.enums import IdleType, UserRole
+from app.extras import helpers
 from app.filters import UserRoleFilter
-from app.models import (
-    ProdutionLine,
-    Operator,
-    Plan,
-    Order,
-    Bundle,
-    Product,
-)
 from app.keyboards import KeyboardCollection
+from app.models import (
+    Bundle,
+    Operator,
+    Order,
+    Plan,
+    Product,
+    ProdutionLine,
+)
 from app.states import AccountStates
-from loaders import loc, bot
-
+from loaders import bot, loc
 
 router = Router()
 router.message.filter(F.from_user.id != F.bot.id)
@@ -42,9 +39,7 @@ async def choose_line(message: Message, state: FSMContext) -> None:
 
 
 @router.callback_query(F.data.startswith("line"), AccountStates.choose_line)
-async def handle_chosen_line(
-    callback: CallbackQuery, state: FSMContext
-) -> None:
+async def handle_chosen_line(callback: CallbackQuery, state: FSMContext) -> None:
     storage_data = await state.get_data()
     if (line_id := storage_data.get("line_id")) is None:
         line_id = callback.data.split(":")[1]
@@ -71,12 +66,8 @@ async def handle_chosen_line(
     )
 
 
-@router.callback_query(
-    F.data.startswith("operator"), AccountStates.choose_operator
-)
-async def handle_chosen_operator(
-    callback: CallbackQuery, state: FSMContext
-) -> None:
+@router.callback_query(F.data.startswith("operator"), AccountStates.choose_operator)
+async def handle_chosen_operator(callback: CallbackQuery, state: FSMContext) -> None:
     storage_data = await state.get_data()
     if (operator_id := storage_data.get("operator_id")) is None:
         operator_id = callback.data.split(":")[1]
@@ -96,9 +87,7 @@ async def handle_chosen_operator(
 
 
 @router.callback_query(F.data == "start_shift", AccountStates.choose_action)
-async def handle_start_shift_btn(
-    callback: CallbackQuery, state: FSMContext
-) -> None:
+async def handle_start_shift_btn(callback: CallbackQuery, state: FSMContext) -> None:
     await state.update_data(order_id=None)
     await state.update_data(bundle_id=None)
 
@@ -125,15 +114,11 @@ async def handle_start_shift_btn(
     await operator.start_shift()
 
     kbc = KeyboardCollection()
-    await callback.message.answer(
-        text, reply_markup=kbc.choose_order_keyboard(orders=orders)
-    )
+    await callback.message.answer(text, reply_markup=kbc.choose_order_keyboard(orders=orders))
 
 
 @router.callback_query(F.data.startswith("order"), AccountStates.choose_order)
-async def handle_chosen_order(
-    callback: CallbackQuery, state: FSMContext
-) -> None:
+async def handle_chosen_order(callback: CallbackQuery, state: FSMContext) -> None:
     storage_data = await state.get_data()
     if (order_id := storage_data.get("order_id")) is None:
         order_id = callback.data.split(":")[1]
@@ -150,9 +135,7 @@ async def handle_chosen_order(
     if not bundles:
         order.finished = True
         await order.save()
-        await callback.message.answer(
-            loc.get_text("operator/order_done", order.name)
-        )
+        await callback.message.answer(loc.get_text("operator/order_done", order.name))
         await handle_start_shift_btn(callback, state)
         return
 
@@ -173,12 +156,8 @@ async def handle_chosen_order(
     )
 
 
-@router.callback_query(
-    F.data.startswith("bundle"), AccountStates.choose_bundle
-)
-async def handle_chosen_bundle(
-    callback: CallbackQuery, state: FSMContext
-) -> None:
+@router.callback_query(F.data.startswith("bundle"), AccountStates.choose_bundle)
+async def handle_chosen_bundle(callback: CallbackQuery, state: FSMContext) -> None:
     storage_data = await state.get_data()
     if (bundle_id := storage_data.get("bundle_id")) is None:
         bundle_id = callback.data.split(":")[1]
@@ -195,9 +174,7 @@ async def handle_chosen_bundle(
     if not products:
         bundle.finished = True
         await bundle.save()
-        await callback.message.answer(
-            loc.get_text("operator/bundle_done", bundle.native_id)
-        )
+        await callback.message.answer(loc.get_text("operator/bundle_done", bundle.native_id))
         await handle_chosen_order(callback, state)
         return
 
@@ -217,12 +194,8 @@ async def handle_chosen_bundle(
     )
 
 
-@router.callback_query(
-    F.data.startswith("product"), AccountStates.choose_product
-)
-async def handle_chosen_product(
-    callback: CallbackQuery, state: FSMContext
-) -> None:
+@router.callback_query(F.data.startswith("product"), AccountStates.choose_product)
+async def handle_chosen_product(callback: CallbackQuery, state: FSMContext) -> None:
     storage_data = await state.get_data()
     if (product_id := storage_data.get("product_id")) is None:
         product_id = callback.data.split(":")[1]
@@ -235,9 +208,7 @@ async def handle_chosen_product(
         return
 
     if product.quantity == 0:
-        await callback.message.answer(
-            loc.get_text("operator/product_done", product.native_id)
-        )
+        await callback.message.answer(loc.get_text("operator/product_done", product.native_id))
         await handle_chosen_bundle(callback, state)
         return
 
@@ -263,9 +234,7 @@ async def handle_chosen_product(
 
 
 @router.callback_query(F.data == "10_products", AccountStates.enter_result)
-async def handle_10_products(
-    callback: CallbackQuery, state: FSMContext
-) -> None:
+async def handle_10_products(callback: CallbackQuery, state: FSMContext) -> None:
     storage_data = await state.get_data()
     if (product_id := storage_data.get("product_id")) is None:
         return
@@ -299,9 +268,7 @@ async def handle_10_products(
     await operator.log_progress(product, count=10)
 
     if product.quantity == 0:
-        await callback.message.answer(
-            loc.get_text("operator/product_done", product.native_id)
-        )
+        await callback.message.answer(loc.get_text("operator/product_done", product.native_id))
         await handle_chosen_bundle(callback, state)
         return
 
@@ -327,9 +294,7 @@ async def handle_10_products(
 
 
 @router.callback_query(F.data == "input_count", AccountStates.enter_result)
-async def handle_input_count_btn(
-    callback: CallbackQuery, state: FSMContext
-) -> None:
+async def handle_input_count_btn(callback: CallbackQuery, state: FSMContext) -> None:
     await helpers.try_delete_message(callback.message)
     await state.set_state(AccountStates.input_count)
     await callback.message.answer(loc.get_text("operator/results/enter_count"))
@@ -381,9 +346,7 @@ async def handle_count_input(message: Message, state: FSMContext) -> None:
 
 
 @router.callback_query(F.data == "finish_product", AccountStates.enter_result)
-async def handle_finish_bundle_btn(
-    callback: CallbackQuery, state: FSMContext
-) -> None:
+async def handle_finish_bundle_btn(callback: CallbackQuery, state: FSMContext) -> None:
     storage_data = await state.get_data()
     if (product_id := storage_data.get("product_id")) is None:
         return
@@ -399,16 +362,12 @@ async def handle_finish_bundle_btn(
 
     await operator.log_progress(product, product.quantity)
 
-    await callback.message.answer(
-        loc.get_text("operator/product_done", product.native_id)
-    )
+    await callback.message.answer(loc.get_text("operator/product_done", product.native_id))
     await handle_chosen_bundle(callback, state)
 
 
 @router.callback_query(F.data == "finish_bundle", AccountStates.choose_product)
-async def handle_finish_bundle_btn(
-    callback: CallbackQuery, state: FSMContext
-) -> None:
+async def handle_finish_bundle_btn(callback: CallbackQuery, state: FSMContext) -> None:
     storage_data = await state.get_data()
     if (bundle_id := storage_data.get("bundle_id")) is None:
         return
@@ -429,9 +388,7 @@ async def handle_finish_bundle_btn(
 
     bundle.finished = True
     await bundle.save()
-    await callback.message.answer(
-        loc.get_text("operator/bundle_done", bundle.native_id)
-    )
+    await callback.message.answer(loc.get_text("operator/bundle_done", bundle.native_id))
     await handle_chosen_order(callback, state)
 
 
@@ -444,9 +401,7 @@ async def handle_finish_bundle_btn(
         AccountStates.enter_result,
     ),
 )
-async def handle_finish_shift(
-    callback: CallbackQuery, state: FSMContext
-) -> None:
+async def handle_finish_shift(callback: CallbackQuery, state: FSMContext) -> None:
     storage_data = await state.get_data()
     if (operator_id := storage_data.get("operator_id")) is None:
         return
@@ -505,9 +460,7 @@ async def handle_idle_btn(callback: CallbackQuery, state: FSMContext) -> None:
     )
 
 
-@router.callback_query(
-    F.data.in_({IdleType.SCHEDULED, IdleType.UNSCHEDULED}), AccountStates.idle
-)
+@router.callback_query(F.data.in_({IdleType.SCHEDULED, IdleType.UNSCHEDULED}), AccountStates.idle)
 async def handle_idle_type(callback: CallbackQuery, state: FSMContext) -> None:
     await helpers.try_delete_message(callback.message)
     await state.set_state(AccountStates.idle_option)
@@ -544,9 +497,7 @@ async def handle_idle_type(callback: CallbackQuery, state: FSMContext) -> None:
     await helpers.try_delete_message(callback.message)
     await state.set_state(AccountStates.idle_now)
 
-    await line.start_idle(
-        operator_id=operator.id, type=idle_type, reason=idle_reason
-    )
+    await line.start_idle(operator_id=operator.id, type=idle_type, reason=idle_reason)
 
     kbc = KeyboardCollection()
     await callback.message.answer(
@@ -556,9 +507,7 @@ async def handle_idle_type(callback: CallbackQuery, state: FSMContext) -> None:
 
 
 @router.callback_query(F.data == "finish_idle", AccountStates.idle_now)
-async def handle_finish_idle(
-    callback: CallbackQuery, state: FSMContext
-) -> None:
+async def handle_finish_idle(callback: CallbackQuery, state: FSMContext) -> None:
     storage_data = await state.get_data()
     if (line_id := storage_data.get("line_id")) is None:
         return
@@ -607,11 +556,7 @@ async def handle_return(callback: CallbackQuery, state: FSMContext) -> None:
             await handle_start_shift_btn(callback, state)
         case AccountStates.input_count:
             await handle_chosen_product(callback, state)
-        case (
-            AccountStates.idle
-            | AccountStates.choose_operator
-            | AccountStates.choose_action
-        ):
+        case AccountStates.idle | AccountStates.choose_operator | AccountStates.choose_action:
             await choose_line(callback.message, state)
         case AccountStates.idle_option:
             await handle_idle_btn(callback, state)

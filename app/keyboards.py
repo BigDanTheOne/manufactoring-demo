@@ -1,20 +1,18 @@
-import config
-
 from aiogram.types import (
-    InlineKeyboardMarkup,
     InlineKeyboardButton,
-    ReplyKeyboardMarkup,
+    InlineKeyboardMarkup,
     KeyboardButton,
+    ReplyKeyboardMarkup,
 )
 from aiogram.utils.keyboard import InlineKeyboardBuilder, ReplyKeyboardBuilder
 
-from app.models import ProdutionLine, Operator, Order, Bundle, Product
 from app.enums import (
     IdleType,
     ProductionLine,
     ScheduledIdleReason,
     UnscheduledIdleReason,
 )
+from app.models import Bundle, Operator, Order, Product, ProdutionLine
 from loaders import loc
 
 
@@ -23,20 +21,11 @@ class KeyboardCollection:
         self._language = lang
 
     def return_button(self) -> InlineKeyboardButton:
-        return InlineKeyboardButton(
-            text=loc.get_text("button/RETURN", self._language),
-            callback_data="return",
-        )
+        button_text = loc.get_text("button/RETURN", self._language)
+        return InlineKeyboardButton(text=button_text, callback_data="return")
 
     def return_button_row(self) -> list[list[InlineKeyboardButton]]:
-        return [
-            [
-                InlineKeyboardButton(
-                    text=loc.get_text("button/RETURN", self._language),
-                    callback_data="return",
-                )
-            ]
-        ]
+        return [[self.return_button()]]
 
     def return_keyboard(self) -> InlineKeyboardMarkup:
         builder = InlineKeyboardBuilder()
@@ -55,17 +44,13 @@ class KeyboardCollection:
         builder.adjust(1)
         return builder.as_markup()
 
-    def yes_no_keyboard(
-        self, return_button: bool = False
-    ) -> InlineKeyboardMarkup:
+    def yes_no_keyboard(self, return_button: bool = False) -> InlineKeyboardMarkup:
         builder = InlineKeyboardBuilder()
         builder.button(
             text=loc.get_text("button/YES", self._language),
             callback_data="yes",
         )
-        builder.button(
-            text=loc.get_text("button/NO", self._language), callback_data="no"
-        )
+        builder.button(text=loc.get_text("button/NO", self._language), callback_data="no")
         if return_button:
             builder.add(self.return_button())
         builder.adjust(2, 1)
@@ -101,28 +86,17 @@ class KeyboardCollection:
         builder.adjust(2)
         return builder.as_markup()
 
-    def choose_line_keyboard(
-        self, lines: list[ProdutionLine]
-    ) -> InlineKeyboardMarkup:
+    def choose_line_keyboard(self, lines: list[ProdutionLine]) -> InlineKeyboardMarkup:
         builder = InlineKeyboardBuilder()
         for line in lines:
-            builder.button(
-                text=line.name,
-                callback_data=f"line:{line.id}",
-            )
+            builder.button(text=line.name, callback_data=f"line:{line.id}")
         builder.adjust(1)
         return builder.as_markup()
 
-    async def operator_buttons(
-        self, line: ProductionLine
-    ) -> list[InlineKeyboardButton]:
+    async def operator_buttons(self, line: ProductionLine) -> list[InlineKeyboardButton]:
         return [
-            InlineKeyboardButton(
-                text=operator.name, callback_data=f"operator:{operator.id}"
-            )
-            for operator in await Operator.find(
-                Operator.line_id == line.id
-            ).to_list()
+            InlineKeyboardButton(text=operator.name, callback_data=f"operator:{operator.id}")
+            for operator in await Operator.find(Operator.line_id == line.id).to_list()
         ]
 
     def choose_action_keyboard(self) -> InlineKeyboardMarkup:
@@ -135,9 +109,7 @@ class KeyboardCollection:
         builder.adjust(1)
         return builder.as_markup()
 
-    def choose_order_keyboard(
-        self, orders: list[Order]
-    ) -> InlineKeyboardMarkup:
+    def choose_order_keyboard(self, orders: list[Order]) -> InlineKeyboardMarkup:
         builder = InlineKeyboardBuilder()
 
         for order in orders:
@@ -154,9 +126,7 @@ class KeyboardCollection:
         builder.adjust(1)
         return builder.as_markup()
 
-    def choose_bundle_keyboard(
-        self, bundles: list[Bundle]
-    ) -> InlineKeyboardMarkup:
+    def choose_bundle_keyboard(self, bundles: list[Bundle]) -> InlineKeyboardMarkup:
         builder = InlineKeyboardBuilder()
 
         for bundle in bundles:
@@ -174,9 +144,7 @@ class KeyboardCollection:
         builder.adjust(1)
         return builder.as_markup()
 
-    def choose_product_keyboard(
-        self, products: list[Product]
-    ) -> InlineKeyboardMarkup:
+    def choose_product_keyboard(self, products: list[Product]) -> InlineKeyboardMarkup:
         builder = InlineKeyboardBuilder()
 
         for product in products:
@@ -233,9 +201,7 @@ class KeyboardCollection:
             callback_data=IdleType.UNSCHEDULED,
         )
 
-        builder.button(
-            text=loc.get_text("button/RETURN"), callback_data="return"
-        )
+        builder.button(text=loc.get_text("button/RETURN"), callback_data="return")
         builder.adjust(1)
         return builder.as_markup()
 
