@@ -1,6 +1,5 @@
 import logging
-from aiogram.types import Message
-from loaders import bot
+from aiogram.types import InaccessibleMessage, Message
 
 
 def get_pure_phone(raw: str) -> str:
@@ -23,16 +22,11 @@ def plural(value: int, variants: list) -> str:
     return variants[variant]
 
 
-async def try_delete_message(
-    message_object_or_id: Message | int, chat_id: int | None = None
-) -> None:
+async def try_delete_message(message: Message | InaccessibleMessage | None) -> None:
+    if not isinstance(message, Message):
+        return
     try:
-        if isinstance(message_object_or_id, int):
-            if chat_id is None:
-                raise ValueError("chat_id is None!")
-            await bot.delete_message(chat_id, message_object_or_id)
-            return
-        await message_object_or_id.delete()
+        await message.delete()
     except Exception:
         logging.info("Message Can't Be Deleted. Passed.")
 

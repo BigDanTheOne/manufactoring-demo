@@ -1,15 +1,16 @@
 from __future__ import annotations
 
-import config
+from datetime import date, datetime
 
-from datetime import datetime, date
+from beanie import BeanieObjectId, Document
 from pydantic import BaseModel, Field
-from beanie import Document, BeanieObjectId
+
+import config
 from app.enums import (
-    UserRole,
     IdleType,
     ScheduledIdleReason,
     UnscheduledIdleReason,
+    UserRole,
 )
 
 
