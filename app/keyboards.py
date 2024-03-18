@@ -22,6 +22,10 @@ class LineCallback(CallbackData, prefix="line"):
     id: PydanticObjectId
 
 
+class FinishProductsCallback(CallbackData, prefix="finish_products"):
+    quantity: int
+
+
 class KeyboardCollection:
     def __init__(self, lang: str = "ru") -> None:
         self._language = lang
@@ -92,7 +96,8 @@ class KeyboardCollection:
     def choose_line_keyboard(self, lines: list[ProdutionLine]) -> InlineKeyboardMarkup:
         builder = InlineKeyboardBuilder()
         for line in lines:
-            builder.button(text=line.name, callback_data=LineCallback(id=line.id).pack())
+            if line.id is not None:
+                builder.button(text=line.name, callback_data=LineCallback(id=line.id))
         builder.adjust(1)
         return builder.as_markup()
 
@@ -169,12 +174,14 @@ class KeyboardCollection:
         builder.adjust(1)
         return builder.as_markup()
 
-    def results_keyboard(self) -> InlineKeyboardMarkup:
+    def results_keyboard(self, products_left: int = 10) -> InlineKeyboardMarkup:
         builder = InlineKeyboardBuilder()
-        builder.button(
-            text=loc.get_text("button/10_PRODUCTS"),
-            callback_data="10_products",
-        )
+        quantity = 10 if products_left > 10 else products_left
+        if quantity > 1:
+            builder.button(
+                text=loc.get_text("button/FINISH_PRODUCTS", quantity),
+                callback_data=FinishProductsCallback(quantity=quantity),
+            )
         builder.button(
             text=loc.get_text("button/OTHER_COUNT"),
             callback_data="input_count",

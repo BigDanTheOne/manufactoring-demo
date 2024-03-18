@@ -71,7 +71,7 @@ button/DISAGREE,Несогласен
 button/START_SHIFT,Начать смену
 button/FINISH_SHIFT,Завершить смену
 button/IDLE,Линия простаивает
-button/10_PRODUCTS,10 изделий/метров
+button/FINISH_PRODUCTS,{} изделий/метров
 button/OTHER_COUNT,Другое кол-во
 button/FINISH_BUNDLE,Завершить пачку
 button/FINISH_PRODUCT,Завершить изделие
@@ -85,4 +85,4 @@ button/OTHER_REASON,Другое
 button/FINISH_IDLE,Линия работает
 button/ADD_OPERATOR,Добавить оператора
 button/ADD_ACCOUNT,Добавить аккаунт
-button/CONTINUE,Продолжить 
+button/CONTINUE,Продолжить

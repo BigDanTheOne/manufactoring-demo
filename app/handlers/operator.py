@@ -7,7 +7,7 @@ from aiogram_widgets.pagination import KeyboardPaginator
 from app.enums import IdleType, UserRole
 from app.extras import helpers
 from app.filters import UserRoleFilter
-from app.keyboards import KeyboardCollection, LineCallback
+from app.keyboards import KeyboardCollection, LineCallback, FinishProductsCallback
 from app.models import (
     Bundle,
     Operator,
@@ -233,21 +233,20 @@ async def handle_chosen_product(callback: CallbackQuery, state: FSMContext) -> N
             product.color,
             product.roll_number,
         ),
-        reply_markup=kbc.results_keyboard(),
+        reply_markup=kbc.results_keyboard(products_left=product.quantity),
     )
     await state.update_data(product_message_id=product_msg.message_id)
 
 
-@router.callback_query(F.data == "10_products", AccountStates.enter_result)
-async def handle_10_products(callback: CallbackQuery, state: FSMContext) -> None:
+@router.callback_query(FinishProductsCallback.filter(), AccountStates.enter_result)
+async def handle_finish_products(
+    callback: CallbackQuery, state: FSMContext, callback_data: FinishProductsCallback
+) -> None:
     storage_data = await state.get_data()
     if (product_id := storage_data.get("product_id")) is None:
         return
-    await state.update_data(product_id=product_id)
     if (product := await Product.get(product_id)) is None:
-        await callback.answer(
-            loc.get_text("operator/product_not_found"),
-        )
+        await callback.answer(loc.get_text("operator/product_not_found"))
         return
 
     if (operator_id := storage_data.get("operator_id")) is None:
@@ -260,17 +259,18 @@ async def handle_10_products(callback: CallbackQuery, state: FSMContext) -> None
 
     await state.set_state(AccountStates.enter_result)
 
-    if product.quantity < 10:
+    quantity = callback_data.quantity
+    if product.quantity < quantity:
         await callback.answer(
             loc.get_text("operator/wrong_product_count", product.quantity),
             show_alert=True,
         )
         return
 
-    product.quantity -= 10
+    product.quantity -= quantity
     await product.save()
 
-    await operator.log_progress(product, count=10)
+    await operator.log_progress(product, count=quantity)
 
     if product.quantity == 0:
         await callback.message.answer(loc.get_text("operator/product_done", product.native_id))
@@ -292,10 +292,10 @@ async def handle_10_products(callback: CallbackQuery, state: FSMContext) -> None
             product.color,
             product.roll_number,
         ),
-        reply_markup=kbc.results_keyboard(),
+        reply_markup=kbc.results_keyboard(products_left=product.quantity),
     )
 
-    await callback.answer(loc.get_text("operator/results/10_products_added"))
+    await callback.answer(loc.get_text("operator/results/product_added", quantity))
 
 
 @router.callback_query(F.data == "input_count", AccountStates.enter_result)
