@@ -1,3 +1,4 @@
+from aiogram.filters.callback_data import CallbackData
 from aiogram.types import (
     InlineKeyboardButton,
     InlineKeyboardMarkup,
@@ -5,6 +6,7 @@ from aiogram.types import (
     ReplyKeyboardMarkup,
 )
 from aiogram.utils.keyboard import InlineKeyboardBuilder, ReplyKeyboardBuilder
+from beanie import PydanticObjectId
 
 from app.enums import (
     IdleType,
@@ -16,13 +18,20 @@ from app.models import Bundle, Operator, Order, Product, ProdutionLine
 from loaders import loc
 
 
+class LineCallback(CallbackData, prefix="line"):
+    id: PydanticObjectId
+
+
 class KeyboardCollection:
     def __init__(self, lang: str = "ru") -> None:
         self._language = lang
 
+    def _inline_button(self, text_key: str, callback_data: str) -> InlineKeyboardButton:
+        button_text = loc.get_text(text_key, self._language)
+        return InlineKeyboardButton(text=button_text, callback_data=callback_data)
+
     def return_button(self) -> InlineKeyboardButton:
-        button_text = loc.get_text("button/RETURN", self._language)
-        return InlineKeyboardButton(text=button_text, callback_data="return")
+        return self._inline_button(text_key="button/RETURN", callback_data="return")
 
     def return_button_row(self) -> list[list[InlineKeyboardButton]]:
         return [[self.return_button()]]
@@ -35,22 +44,16 @@ class KeyboardCollection:
 
     def continue_keyboard(self) -> InlineKeyboardMarkup:
         builder = InlineKeyboardBuilder()
-        builder.add(
-            InlineKeyboardButton(
-                text=loc.get_text("button/CONTINUE", self._language),
-                callback_data="return",
-            )
-        )
+        builder.add(self._inline_button(text_key="button/CONTINUE", callback_data="return"))
         builder.adjust(1)
         return builder.as_markup()
 
     def yes_no_keyboard(self, return_button: bool = False) -> InlineKeyboardMarkup:
         builder = InlineKeyboardBuilder()
-        builder.button(
-            text=loc.get_text("button/YES", self._language),
-            callback_data="yes",
+        builder.add(
+            self._inline_button(text_key="button/YES", callback_data="yes"),
+            self._inline_button(text_key="button/NO", callback_data="no"),
         )
-        builder.button(text=loc.get_text("button/NO", self._language), callback_data="no")
         if return_button:
             builder.add(self.return_button())
         builder.adjust(2, 1)
@@ -89,7 +92,7 @@ class KeyboardCollection:
     def choose_line_keyboard(self, lines: list[ProdutionLine]) -> InlineKeyboardMarkup:
         builder = InlineKeyboardBuilder()
         for line in lines:
-            builder.button(text=line.name, callback_data=f"line:{line.id}")
+            builder.button(text=line.name, callback_data=LineCallback(id=line.id).pack())
         builder.adjust(1)
         return builder.as_markup()
 
@@ -201,7 +204,7 @@ class KeyboardCollection:
             callback_data=IdleType.UNSCHEDULED,
         )
 
-        builder.button(text=loc.get_text("button/RETURN"), callback_data="return")
+        builder.add(self.return_button())
         builder.adjust(1)
         return builder.as_markup()
 

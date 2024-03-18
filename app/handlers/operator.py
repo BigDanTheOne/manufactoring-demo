@@ -7,7 +7,7 @@ from aiogram_widgets.pagination import KeyboardPaginator
 from app.enums import IdleType, UserRole
 from app.extras import helpers
 from app.filters import UserRoleFilter
-from app.keyboards import KeyboardCollection
+from app.keyboards import KeyboardCollection, LineCallback
 from app.models import (
     Bundle,
     Operator,
@@ -38,13 +38,18 @@ async def choose_line(message: Message, state: FSMContext) -> None:
     )
 
 
-@router.callback_query(F.data.startswith("line"), AccountStates.choose_line)
-async def handle_chosen_line(callback: CallbackQuery, state: FSMContext) -> None:
-    storage_data = await state.get_data()
-    if (line_id := storage_data.get("line_id")) is None:
-        line_id = callback.data.split(":")[1]
-    await state.update_data(line_id=line_id)
-    if (line := await ProdutionLine.get(line_id)) is None:
+@router.callback_query(LineCallback.filter(), AccountStates.choose_line)
+async def handle_chosen_line(
+    callback: CallbackQuery, state: FSMContext, callback_data: LineCallback | None = None
+) -> None:
+    if callback_data is not None:
+        line_id = callback_data.id
+        await state.update_data(line_id=str(line_id))
+    else:
+        storage_data = await state.get_data()
+        line_id = storage_data.get("line_id")
+
+    if line_id is None or (line := await ProdutionLine.get(line_id)) is None:
         return
 
     await helpers.try_delete_message(callback.message)
