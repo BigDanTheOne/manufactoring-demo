@@ -31,7 +31,7 @@ async def main() -> None:
     await Order.delete_all()
     await Bundle.delete_all()
     await Product.delete_all()
-    await Operator.delete_all()
+    # await Operator.delete_all()
 
     lines = await ProdutionLine.all().to_list()
     for line in lines:
