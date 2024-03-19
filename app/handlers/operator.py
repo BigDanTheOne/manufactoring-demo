@@ -223,14 +223,18 @@ async def handle_chosen_bundle(
         bundle.finished = True
         await bundle.save()
         await message.answer(loc.get_text("operator/bundle_done", bundle.native_id))
-        await handle_chosen_order(callback, state)
+        await handle_chosen_order(
+            callback, state, prefix_text=loc.get_text("operator/continue_order")
+        )
         return
     await state.set_state(AccountStates.choose_product)
     if len(products) == 1:
         await state.update_data(product_id=str(products[0].id))
-        await handle_chosen_product(
-            callback, state, prefix_text=bundle_info + loc.get_text("operator/chosen_product")
-        )
+        # await handle_chosen_product(
+        #     callback, state, prefix_text=bundle_info + loc.get_text("operator/chosen_product")
+        # )
+        await message.answer(bundle_info + loc.get_text("operator/chosen_product"))
+        await handle_chosen_product(callback, state)
         return
 
     await message.answer(
@@ -276,7 +280,9 @@ async def handle_chosen_product(
 
     if product.quantity == 0:
         await message.answer(loc.get_text("operator/product_done", product.native_id))
-        await handle_chosen_bundle(callback, state)
+        await handle_chosen_bundle(
+            callback, state, prefix_text=loc.get_text("operator/continue_bundle")
+        )
         return
 
     await state.set_state(AccountStates.enter_result)
@@ -322,7 +328,9 @@ async def handle_finish_products(
 
     if product.quantity == 0:
         await message.answer(loc.get_text("operator/product_done", product.native_id))
-        await handle_chosen_bundle(callback, state)
+        await handle_chosen_bundle(
+            callback, state, prefix_text=loc.get_text("operator/continue_bundle")
+        )
         return
 
     product_info = loc.get_text(
@@ -344,7 +352,7 @@ async def handle_finish_products(
         text=product_info + loc.get_text("operator/enter_result"),
         reply_markup=KeyboardCollection().results_keyboard(products_left=product.quantity),
     )
-    await callback.answer(loc.get_text("operator/results/product_added", quantity))
+    await callback.answer(loc.get_text("operator/results/products_added", quantity))
 
 
 @router.callback_query(F.data == "input_count", AccountStates.enter_result)
@@ -421,7 +429,9 @@ async def handle_finish_product_btn(callback: CallbackQuery, state: FSMContext) 
     await operator.log_progress(product, product.quantity)
 
     await message.answer(loc.get_text("operator/product_done", product.native_id))
-    await handle_chosen_bundle(callback, state)
+    await handle_chosen_bundle(
+        callback, state, prefix_text=loc.get_text("operator/continue_bundle")
+    )
 
 
 @router.callback_query(F.data == "finish_bundle", AccountStates.choose_product)
@@ -450,7 +460,7 @@ async def handle_finish_bundle_btn(callback: CallbackQuery, state: FSMContext) -
     await bundle.save()
 
     await message.answer(loc.get_text("operator/bundle_done", bundle.native_id))
-    await handle_chosen_order(callback, state)
+    await handle_chosen_order(callback, state, prefix_text=loc.get_text("operator/continue_order"))
 
 
 @router.callback_query(

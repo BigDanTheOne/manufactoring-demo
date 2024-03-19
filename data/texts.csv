@@ -10,6 +10,8 @@ operator/no_plan,Плана на сегодня ещё нет.
 operator/choose_order,Выберите заказ
 operator/chosen_order,"Выбран заказ:
 "
+operator/continue_order,"Продолжаем заказ:
+"
 operator/order_info,"<b>{}</b>
 
 Линия: {}
@@ -21,6 +23,8 @@ operator/order_info,"<b>{}</b>
 "
 operator/choose_bundle,Выберите изготавливаемую пачку:
 operator/chosen_bundle,"Выбрана изготавливаемая пачка:
+"
+operator/continue_bundle,"Продолжаем изготавливать пачку:
 "
 operator/bundle_info,"<b>{}</b>
 
@@ -46,7 +50,7 @@ Roll Number: {}
 
 "
 operator/enter_result,Введите промежуточный результат:
-operator/results/10_products_added,Добавлено 10 изделий / метров
+operator/results/products_added,Добавлено {} изделий / метров
 operator/results/enter_count,Введите кол-во изготовленных изделий:
 operator/results/number_required,Нужно ввести число
 operator/finish_shift,"За эту смену:
