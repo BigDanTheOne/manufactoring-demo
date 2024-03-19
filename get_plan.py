@@ -1,10 +1,11 @@
 import asyncio
-
 from datetime import datetime, timedelta
+
 from beanie import init_beanie
-from app.models import Account, Operator, Plan, Order, Bundle, Product
-from loaders import mongo_client
+
 from api import API
+from app.models import Account, Bundle, Operator, Order, Plan, Product
+from loaders import mongo_client
 
 DAYS = 2
 
@@ -37,6 +38,7 @@ async def main() -> None:
                 total_mass=order.total_mass,
                 total_length=order.total_length,
                 execution_time=order.execution_time,
+                instructions=order.instructions,
             )
             await new_order.insert()
             new_plan.orders.append(new_order.id)
@@ -49,6 +51,7 @@ async def main() -> None:
                     total_mass=bundle.total_mass,
                     total_length=bundle.total_length,
                     execution_time=bundle.execution_time,
+                    instructions=bundle.instructions,
                 )
                 await new_bundle.insert()
                 new_order.bundles.append(new_bundle.id)
@@ -65,6 +68,7 @@ async def main() -> None:
                         quantity=product.quantity,
                         color=product.color,
                         roll_number=product.roll_number,
+                        instructions=product.instructions,
                     )
                     await new_product.insert()
                     new_bundle.products.append(new_product.id)

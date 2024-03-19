@@ -164,6 +164,7 @@ async def handle_chosen_order(
         order.total_mass,
         order.total_length,
         order.execution_time,
+        order.instructions,
     )
     bundles = await order.get_active_bundles()
     if not bundles:
@@ -215,6 +216,7 @@ async def handle_chosen_bundle(
         bundle.total_mass,
         bundle.total_length,
         bundle.execution_time,
+        bundle.instructions,
     )
     products = await bundle.get_active_products()
     if not products:
@@ -269,6 +271,7 @@ async def handle_chosen_product(
         product.quantity,
         product.color,
         product.roll_number,
+        product.instructions,
     )
 
     if product.quantity == 0:
@@ -332,6 +335,7 @@ async def handle_finish_products(
         product.quantity,
         product.color,
         product.roll_number,
+        product.instructions,
     )
 
     await bot.edit_message_text(

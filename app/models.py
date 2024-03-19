@@ -21,6 +21,7 @@ class Order_(BaseModel):
     total_mass: float = Field(alias="totalMass")
     total_length: float = Field(alias="totalLength")
     execution_time: int = Field(alias="executionTime")
+    instructions: str
 
 
 class Bundle_(BaseModel):
@@ -29,6 +30,7 @@ class Bundle_(BaseModel):
     total_mass: float = Field(alias="totalMass")
     total_length: float = Field(alias="totalLength")
     execution_time: int = Field(alias="executionTime")
+    instructions: str
 
 
 class Product_(BaseModel):
@@ -40,6 +42,7 @@ class Product_(BaseModel):
     quantity: int
     color: str
     roll_number: int = Field(alias="rollNumber")
+    instructions: str
 
 
 class Account(Document):
@@ -190,6 +193,7 @@ class Order(Document):
     total_mass: float
     total_length: float
     execution_time: int
+    instructions: str
     finished: bool = False
 
     async def get_active_bundles(self) -> list[Bundle]:
@@ -211,6 +215,7 @@ class Bundle(Document):
     total_mass: float
     total_length: float
     execution_time: int
+    instructions: str
     finished: bool = False
 
     async def get_active_products(self) -> list[Product]:
@@ -236,6 +241,7 @@ class Product(Document):
     quantity: int
     color: str
     roll_number: int
+    instructions: str
 
     @property
     def total_mass(self) -> float:
