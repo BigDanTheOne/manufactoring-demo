@@ -8,22 +8,30 @@ operator/operator_profile,"<b>Профиль оператора</b>
 Имя: {}"
 operator/no_plan,Плана на сегодня ещё нет.
 operator/choose_order,Выберите заказ
-operator/choose_bundle,"<b>{}</b>
+operator/chosen_order,"Выбран заказ:
+"
+operator/order_info,"<b>{}</b>
 
 Линия: {}
 Общая масса: {}
 Общая длина: {}
 Время выполнения: {}
 
-Выберите изготавливаемую пачку:"
-operator/choose_product,"<b>{}</b>
+"
+operator/choose_bundle,Выберите изготавливаемую пачку:
+operator/chosen_bundle,"Выбрана изготавливаемая пачка:
+"
+operator/bundle_info,"<b>{}</b>
 
 Общая масса: {}
 Общая длина: {}
 Время выполнения: {}
 
-Выберите изделие:."
-operator/enter_result,"<b>{}</b>
+"
+operator/choose_product,Выберите изделие:
+operator/chosen_product,"Выбрано изделие:
+"
+operator/product_info,"<b>{}</b>
 
 Профиль: {}
 Ширина: {}
@@ -33,7 +41,8 @@ operator/enter_result,"<b>{}</b>
 Цвет: {}
 Roll Number: {}
 
-Введите промежуточный результат:"
+"
+operator/enter_result,Введите промежуточный результат:
 operator/results/10_products_added,Добавлено 10 изделий / метров
 operator/results/enter_count,Введите кол-во изготовленных изделий:
 operator/results/number_required,Нужно ввести число
@@ -71,7 +80,7 @@ button/DISAGREE,Несогласен
 button/START_SHIFT,Начать смену
 button/FINISH_SHIFT,Завершить смену
 button/IDLE,Линия простаивает
-button/10_PRODUCTS,10 изделий/метров
+button/FINISH_PRODUCTS,{} изделий/метров
 button/OTHER_COUNT,Другое кол-во
 button/FINISH_BUNDLE,Завершить пачку
 button/FINISH_PRODUCT,Завершить изделие
@@ -85,4 +94,4 @@ button/OTHER_REASON,Другое
 button/FINISH_IDLE,Линия работает
 button/ADD_OPERATOR,Добавить оператора
 button/ADD_ACCOUNT,Добавить аккаунт
-button/CONTINUE,Продолжить 
+button/CONTINUE,Продолжить

@@ -1,13 +1,11 @@
 import os
 import shutil
 import subprocess
-import config
 from datetime import datetime
 
-from aiogram.types import (
-    FSInputFile,
-    InputMediaDocument,
-)
+from aiogram.types import FSInputFile, InputMediaDocument
+
+import config
 from loaders import bot, mongo_client
 
 
@@ -23,7 +21,7 @@ def make_db_dump() -> None:
             f"--db={db_name}",
             f"--out={dump_dir_path}",
             f"--uri={config.MONGODB_CONN}",
-        ]
+        ],
     )
 
 

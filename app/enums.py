@@ -11,17 +11,16 @@ class IdleType(StrEnum):
     UNSCHEDULED = "unscheduled"
 
 
-class ScheduledIdleReason(StrEnum):
+class IdleReason(StrEnum):
+    # Sheduled Idle Reasons
     REPAIR = "repair"
     NO_ORDERS = "no_orders"
     COIL_REPLACE = "coil_replace"
-
-
-class UnscheduledIdleReason(StrEnum):
+    # Unsheduled Idle Reasons
     BREAKDOWN = "breakdown"
     OTHER = "other"
 
 
-class ProductionLine(StrEnum):
+class LineName(StrEnum):
     FISHER = "Фишер"
     BUDMASH = "Будмаш"

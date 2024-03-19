@@ -9,7 +9,7 @@ from app.models import Plan_
 
 class API:
     def __init__(self) -> None:
-        self._json_file = open("response.example.json", "r")
+        self._json_file = open("fixtures/response.example.json", "r")
 
     def get_plan(self) -> Plan_:
         response = '{"orders": ' + self._json_file.read() + "}"

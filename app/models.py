@@ -1,16 +1,12 @@
 from __future__ import annotations
 
-import config
+from datetime import date, datetime
 
-from datetime import datetime, date
+from beanie import BeanieObjectId, Document
 from pydantic import BaseModel, Field
-from beanie import Document, BeanieObjectId
-from app.enums import (
-    UserRole,
-    IdleType,
-    ScheduledIdleReason,
-    UnscheduledIdleReason,
-)
+
+import config
+from app.enums import IdleReason, IdleType, UserRole
 
 
 class Plan_(BaseModel):
@@ -83,8 +79,8 @@ class Operator(Document):
     shift_log: list[ShiftLog] = []
     shift_mass_produced: float = 0.0
 
-    async def get_line(self) -> ProdutionLine | None:
-        return await ProdutionLine.get(self.line_id)
+    async def get_line(self) -> ProductionLine | None:
+        return await ProductionLine.get(self.line_id)
 
     async def start_shift(self) -> None:
         if self.shift_log and self.shift_log[-1].end_time is None:
@@ -121,11 +117,11 @@ class IdleLog(BaseModel):
     start_time: datetime
     end_time: datetime | None = None
     type: IdleType
-    reason: ScheduledIdleReason | UnscheduledIdleReason
+    reason: IdleReason
     duration: float | None = None
 
 
-class ProdutionLine(Document):
+class ProductionLine(Document):
     name: str
     idle_log: list[IdleLog]
 
@@ -133,7 +129,7 @@ class ProdutionLine(Document):
         self,
         operator_id: BeanieObjectId,
         type: IdleType,
-        reason: ScheduledIdleReason | UnscheduledIdleReason,
+        reason: IdleReason,
     ) -> None:
         self.idle_log.append(
             IdleLog(

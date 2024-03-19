@@ -1,0 +1,14 @@
+[{
+  "_id": {
+    "$oid": "65e87fb9d7fc78bda7d94a7c"
+  },
+  "name": "Фишер",
+  "idle_log": []
+},
+{
+  "_id": {
+    "$oid": "65e87fc4d7fc78bda7d94a7d"
+  },
+  "name": "Будмаш",
+  "idle_log": []
+}]
