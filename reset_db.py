@@ -1,14 +1,15 @@
 import asyncio
 
 from beanie import init_beanie
+
 from app.models import (
     Account,
-    Operator,
-    Plan,
-    Order,
     Bundle,
+    Operator,
+    Order,
+    Plan,
     Product,
-    ProdutionLine,
+    ProductionLine,
 )
 from loaders import mongo_client
 
@@ -23,7 +24,7 @@ async def main() -> None:
             Order,
             Bundle,
             Product,
-            ProdutionLine,
+            ProductionLine,
         ],
     )
 
@@ -33,7 +34,7 @@ async def main() -> None:
     await Product.delete_all()
     # await Operator.delete_all()
 
-    lines = await ProdutionLine.all().to_list()
+    lines = await ProductionLine.all().to_list()
     for line in lines:
         line.idle_log = []
         await line.save()

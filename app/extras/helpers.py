@@ -1,5 +1,6 @@
 import logging
-from aiogram.types import InaccessibleMessage, Message
+
+from aiogram.types import CallbackQuery, InaccessibleMessage, Message
 
 
 def get_pure_phone(raw: str) -> str:
@@ -28,7 +29,25 @@ async def try_delete_message(message: Message | InaccessibleMessage | None) -> N
     try:
         await message.delete()
     except Exception:
-        logging.info("Message Can't Be Deleted. Passed.")
+        logging.info("Message can't be deleted. Passed.")
+
+
+async def hide_markup_or_delete(callback: CallbackQuery) -> Message | None:
+    if not isinstance(callback.message, Message):
+        return None
+    try:
+        await callback.message.delete_reply_markup()
+    except Exception:
+        logging.info("Message's reply markup can't be deleted. Try to delete message.")
+        # await try_delete_message(callback.message)
+    return callback.message
+
+
+def resolve_message(obj: Message | CallbackQuery) -> Message | None:
+    if isinstance(obj, Message):
+        return obj
+    if isinstance(obj.message, Message):
+        return obj.message
 
 
 def is_int(n: str) -> bool:

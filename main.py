@@ -10,7 +10,7 @@ from app.handlers import bot_sleep, start, operator, admin
 from app.models import (
     Account,
     Operator,
-    ProdutionLine,
+    ProductionLine,
     Plan,
     Order,
     Bundle,
@@ -25,7 +25,7 @@ async def run():
         document_models=[
             Account,
             Operator,
-            ProdutionLine,
+            ProductionLine,
             Plan,
             Order,
             Bundle,
