@@ -7,6 +7,7 @@ from aiogram.types import (
     ReplyKeyboardMarkup,
 )
 from aiogram.utils.keyboard import InlineKeyboardBuilder, ReplyKeyboardBuilder
+from aiogram_widgets.types import AdditionalButtonsType, ButtonType
 
 from app import callbacks
 from app.enums import IdleReason, IdleType
@@ -25,7 +26,7 @@ class KeyboardCollection:
     def inline_return_button(self) -> InlineKeyboardButton:
         return self._inline(text_key="button/RETURN", callback_data="return")
 
-    def return_button_row(self) -> list[list[InlineKeyboardButton]]:
+    def return_button_row(self) -> AdditionalButtonsType:
         return [[self.inline_return_button()]]
 
     def return_keyboard(self) -> InlineKeyboardMarkup:
@@ -85,7 +86,7 @@ class KeyboardCollection:
         builder.adjust(1)
         return builder.as_markup()
 
-    def operator_buttons(self, operators: list[Operator]) -> list[InlineKeyboardButton]:
+    def operator_buttons(self, operators: list[Operator]) -> list[ButtonType]:
         return [InlineKeyboardButton(
             text=operator.name, callback_data=callbacks.Operator(id=operator.id).pack(),
         ) for operator in operators if operator.id is not None]
